@@ -129,6 +129,7 @@
     pointer-events: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     backdrop-filter: blur(2px);
+    contain: layout style paint;
   }
   .word-tile.active {
     border-color: var(--neon-cyan);
@@ -209,6 +210,146 @@
   }
   .sg-label { font-size: 10px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
   .sg-val { font-size: 28px; font-weight: bold; color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
+
+  /* ── LEADERBOARD & RECORD FORM ── */
+  #overlay-wrapper {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    max-width: 1000px;
+    width: 95%;
+    padding: 10px;
+  }
+  #main-overlay-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1.2;
+    width: 100%;
+  }
+  #leaderboard-container {
+    flex: 0.8;
+    max-width: 420px;
+    width: 100%;
+    background: rgba(10,10,30,0.85);
+    border: 1px solid rgba(191,95,255,0.3);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(191,95,255,0.15);
+    backdrop-filter: blur(4px);
+  }
+  .leaderboard-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px var(--neon-purple);
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .leaderboard-table th {
+    color: var(--dim);
+    text-transform: uppercase;
+    font-size: 9px;
+    padding: 6px 4px;
+    border-bottom: 1px solid rgba(191,95,255,0.2);
+    text-align: left;
+  }
+  .leaderboard-table td {
+    padding: 8px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  .leaderboard-row.highlight {
+    background: rgba(0, 245, 255, 0.08);
+  }
+  .leaderboard-row.highlight td {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px var(--neon-cyan);
+  }
+  .leaderboard-table tr:nth-child(even) {
+    background: rgba(255,255,255,0.01);
+  }
+  .leaderboard-rank { font-weight: bold; color: var(--neon-yellow); text-shadow: 0 0 4px var(--neon-yellow); width: 30px; }
+  .leaderboard-name { font-weight: bold; }
+  .leaderboard-score { text-align: right; font-weight: bold; color: var(--neon-green); }
+  .leaderboard-wpm { text-align: right; color: var(--neon-cyan); }
+  .leaderboard-lvl { text-align: right; color: var(--neon-purple); }
+
+  #record-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(10,10,30,0.95);
+    border: 2px solid var(--neon-yellow);
+    box-shadow: 0 0 25px rgba(255, 230, 0, 0.4);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+    max-width: 420px;
+    width: 100%;
+    animation: borderPulse 2s infinite alternate;
+  }
+  #record-form.hidden { display: none; }
+  @keyframes borderPulse {
+    0% { border-color: rgba(255, 230, 0, 0.4); box-shadow: 0 0 15px rgba(255, 230, 0, 0.2); }
+    100% { border-color: var(--neon-yellow); box-shadow: 0 0 30px rgba(255, 230, 0, 0.6); }
+  }
+  .record-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow);
+    margin-bottom: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .record-sub {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  #player-name-input {
+    background: #060610;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    text-transform: uppercase;
+    text-align: center;
+    width: 150px;
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.15);
+  }
+  #player-name-input:focus {
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+  }
+
+  @media (max-width: 850px) {
+    #overlay-wrapper {
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      max-height: 95vh;
+    }
+    #leaderboard-container {
+      max-width: 1000px;
+    }
+  }
 
   /* level-up splash */
   #level-splash {
@@ -367,6 +508,33 @@
   }
   body.shake { animation: shake 0.35s ease; }
 
+  /* ── POWER-UPS SPECIAL TILES ── */
+  .word-tile.tile-freeze {
+    border-color: #00f5ff;
+    box-shadow: 0 0 16px #00f5ff, inset 0 0 10px rgba(0, 245, 255, 0.2);
+    color: #e6f9ff;
+  }
+  .word-tile.tile-bomb {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 16px var(--neon-purple), inset 0 0 10px rgba(191,95,255, 0.2);
+    color: #ffe6ff;
+  }
+  .word-tile.tile-shield {
+    border-color: var(--neon-yellow);
+    box-shadow: 0 0 16px var(--neon-yellow), inset 0 0 10px rgba(255, 230, 0, 0.2);
+    color: #fff9e6;
+  }
+  #game-area.frost-active {
+    box-shadow: inset 0 0 80px rgba(0, 245, 255, 0.25);
+    transition: box-shadow 0.4s;
+  }
+  .powerup-icon {
+    font-size: 14px;
+    margin-right: 3px;
+    filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.6));
+  }
+  #start-btn.hidden { display: none; }
+
   /* ── MOBILE INPUT (hidden; keeps focus to show virtual keyboard) ── */
   #mobile-input {
     position: fixed;
@@ -510,6 +678,30 @@
   .lang-btn:not(.active):hover {
     border-color: rgba(0,245,255,0.4);
     color: var(--text);
+  }
+
+  .diff-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .diff-btn {
+    background: transparent;
+    border: 1px solid rgba(0,245,255,0.2);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+  .diff-btn.active {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0,245,255,0.3);
   }
 
   /* ── OVERLAY RTL (Arabic mode) ── */
@@ -682,6 +874,10 @@
       <span class="menu-label">Reset</span>
       <span class="menu-key">R</span>
     </button>
+    <button class="menu-btn" id="btn-mute" title="Mute / Unmute">
+      <span class="menu-icon">🔊</span>
+      <span class="menu-label">Sound</span>
+    </button>
   </div>
 
   <div id="hearts" style="margin-left:auto">
@@ -712,19 +908,58 @@
 </div>
 
 <div id="overlay">
-  <div class="overlay-title">Word Strike</div>
-  <div class="overlay-sub">Type Faster. Go Further.</div>
-  <div class="instructions">
-    Words drift across the screen. <span>Type the glowing word</span> to destroy it.<br>
-    Miss a word and lose a ♥. Chain words for a <span>combo multiplier</span>.<br>
-    10 levels of escalating chaos await you.
+  <div id="overlay-wrapper">
+    <div id="main-overlay-panel">
+      <div class="overlay-title">Word Strike</div>
+      <div class="overlay-sub">Type Faster. Go Further.</div>
+      <div class="instructions">
+        Words drift across the screen. <span>Type the glowing word</span> to destroy it.<br>
+        Miss a word and lose a ♥. Chain words for a <span>combo multiplier</span>.<br>
+        10 levels of escalating chaos await you.
+      </div>
+      <div id="lang-selector">
+        <button class="lang-btn active" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="ar">العربية</button>
+      </div>
+      <div class="diff-selector" id="diff-selector">
+        <button class="diff-btn" data-hp="7">Easy (7 ♥)</button>
+        <button class="diff-btn active" data-hp="5">Normal (5 ♥)</button>
+        <button class="diff-btn" data-hp="3">Hard (3 ♥)</button>
+      </div>
+
+      <!-- Neon Record Submission Form -->
+      <div id="record-form" class="hidden">
+        <div class="record-title">🎉 NEW HIGH SCORE! 🎉</div>
+        <div class="record-sub">Enter name to join Leaderboard / أدخل اسمك:</div>
+        <div style="display:flex; gap:10px; justify-content:center; align-items:center;">
+          <input type="text" id="player-name-input" maxlength="8" placeholder="PLAYER">
+          <button class="big-btn" id="submit-record-btn" style="padding: 10px 20px; font-size: 14px;">Save</button>
+        </div>
+      </div>
+
+      <button class="big-btn" id="start-btn">Start Game</button>
+      <div id="high-score-line"></div>
+    </div>
+
+    <!-- Leaderboard Sidebar -->
+    <div id="leaderboard-container">
+      <div class="leaderboard-title">🏆 LEADERBOARD / المتصدرون 🏆</div>
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;">Rank</th>
+            <th>Player</th>
+            <th style="text-align: right;">Score</th>
+            <th style="text-align: right;">WPM</th>
+            <th style="text-align: right;">Lvl</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div id="lang-selector">
-    <button class="lang-btn active" data-lang="en">English</button>
-    <button class="lang-btn" data-lang="ar">العربية</button>
-  </div>
-  <button class="big-btn" id="start-btn">Start Game</button>
-  <div id="high-score-line"></div>
 </div>
 
 <div id="tap-hint">⌨ Tap to type</div>
@@ -915,6 +1150,8 @@ let state = {
   level: 1,
   score: 0,
   hp: 5,
+  startHp: 5,
+  muted: false,
   combo: 1,
   comboCount: 0,
   totalKeys: 0,
@@ -930,6 +1167,7 @@ let state = {
   particles: [],
   stars: [],
   audioCtx: null,
+  freezeEndTime: 0,
 };
 
 // ═══════════════════════════════════════════════════
@@ -964,6 +1202,10 @@ const resumeBtn = document.getElementById('resume-btn');
 const resetFromPauseBtn = document.getElementById('reset-from-pause-btn');
 const mobileInput = document.getElementById('mobile-input');
 const tapHint = document.getElementById('tap-hint');
+const leaderboardBody = document.getElementById('leaderboard-body');
+const recordForm = document.getElementById('record-form');
+const playerNameInput = document.getElementById('player-name-input');
+const submitRecordBtn = document.getElementById('submit-record-btn');
 
 // ═══════════════════════════════════════════════════
 //  CANVAS RESIZE
@@ -1022,7 +1264,7 @@ function initAudio() {
 }
 
 function playTone(freq, type='sine', dur=0.06, vol=0.12, delay=0) {
-  if (!state.audioCtx) return;
+  if (state.muted || !state.audioCtx) return;
   const ctx = state.audioCtx;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -1046,6 +1288,16 @@ function playLevelUp() {
   [523,659,784,1047].forEach((f,i) => playTone(f,'sine',0.12,0.16,i*0.1));
 }
 function playError() { playTone(220, 'square', 0.05, 0.08); }
+function playFreezeSnd() {
+  [587, 659, 784, 880, 1047].forEach((f, i) => playTone(f, 'sine', 0.15, 0.12, i * 0.05));
+}
+function playBombSnd() {
+  playTone(140, 'sawtooth', 0.45, 0.28);
+  playTone(90, 'triangle', 0.5, 0.3);
+}
+function playShieldSnd() {
+  [440, 554, 659, 880].forEach((f, i) => playTone(f, 'triangle', 0.16, 0.1, i * 0.05));
+}
 
 // ═══════════════════════════════════════════════════
 //  WORD SELECTION
@@ -1238,18 +1490,29 @@ function spawnWord() {
   const id = state.nextId++;
   const hudH = document.getElementById('hud').offsetHeight;
   const vph = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const areaH = vph - hudH - getKbHeight();
-  const y = hudH + 20 + Math.random() * Math.max(areaH - 80, 40);
+  const playH = vph - hudH - getKbHeight();
+  const y = Math.random() * Math.max(playH - 80, 0);
+
+  // 12% chance for a special power-up word once the game escalates past level 1
+  let type = 'normal';
+  let icon = '';
+  if (state.level >= 2 && Math.random() < 0.12) {
+    const roll = Math.random();
+    if (roll < 0.4)      { type = 'freeze'; icon = '❄️'; }
+    else if (roll < 0.7) { type = 'bomb';   icon = '💣'; }
+    else                 { type = 'shield'; icon = '🛡️'; }
+  }
 
   const el = document.createElement('div');
-  el.className = 'word-tile';
+  el.className = 'word-tile' + (type !== 'normal' ? ` tile-${type}` : '');
   el.id = `tile-${id}`;
   el.style.right = '-200px';
   el.style.top = y + 'px';
 
-  // build char spans; arabic tiles get RTL class
+  // build char spans; power-up icon is a separate span so typing stays aligned
   if (state.language === 'ar') el.classList.add('arabic');
-  el.innerHTML = word.split('').map(c => `<span class="char">${c}</span>`).join('');
+  el.innerHTML = (icon ? `<span class="powerup-icon">${icon}</span>` : '')
+    + word.split('').map(c => `<span class="char">${c}</span>`).join('');
   gameArea.appendChild(el);
 
   // start off-screen right
@@ -1260,6 +1523,7 @@ function spawnWord() {
 
   state.tiles[id] = {
     word,
+    type,
     typed: 0,
     x: startX,
     y,
@@ -1327,9 +1591,13 @@ function moveLoop(ts) {
   const dt = Math.min(ts - lastMove, 50);
   lastMove = ts;
 
+  const frozen = Date.now() < state.freezeEndTime;
+  gameArea.classList.toggle('frost-active', frozen);
+  const mult = frozen ? 0.2 : 1;
+
   for (const id in state.tiles) {
     const t = state.tiles[id];
-    t.x -= t.speed * (dt / 16.67);
+    t.x -= t.speed * mult * (dt / 16.67);
     t.el.style.left = t.x + 'px';
     if (t.x + (t.el.offsetWidth || 160) < 0) {
       escapeTile(+id);
@@ -1344,7 +1612,7 @@ function moveLoop(ts) {
 // ═══════════════════════════════════════════════════
 const COLORS = ['#00f5ff','#39ff14','#ff2d78','#ffe600','#bf5fff','#ff8c00'];
 
-function spawnParticles(cx, cy) {
+function spawnParticles(cx, cy, color = null) {
   const count = 24 + Math.floor(Math.random()*10);
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -1356,7 +1624,7 @@ function spawnParticles(cx, cy) {
       life: 1,
       decay: 0.025 + Math.random() * 0.03,
       r: 2 + Math.random() * 3,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      color: color || COLORS[Math.floor(Math.random() * COLORS.length)],
     });
   }
 }
@@ -1482,8 +1750,36 @@ function wordComplete(id, t) {
   else if (state.comboCount >= 2) state.combo = 2;
 
   updateComboDisplay(true);
-  destroyTile(id);
   playWordDone();
+
+  // apply power-up effect
+  if (t.type === 'freeze') {
+    state.freezeEndTime = Date.now() + 5000;
+    gameArea.classList.add('frost-active');
+    playFreezeSnd();
+  } else if (t.type === 'bomb') {
+    const others = Object.keys(state.tiles).map(o => +o).filter(o => o !== id);
+    others.forEach(o => {
+      const ot = state.tiles[o];
+      if (!ot) return;
+      state.score += ot.word.length * 5;
+      spawnParticles(
+        ot.el.getBoundingClientRect().left + ot.el.offsetWidth / 2,
+        ot.el.getBoundingClientRect().top + ot.el.offsetHeight / 2,
+        '#ff8c00'
+      );
+      destroyTile(o);
+    });
+    playBombSnd();
+  } else if (t.type === 'shield') {
+    if (state.hp < (state.startHp || 5)) {
+      state.hp++;
+      renderHearts();
+      playShieldSnd();
+    }
+  }
+
+  destroyTile(id);
   checkLevelUp();
   updateHUD();
 }
@@ -1580,7 +1876,7 @@ function startGame() {
   state.activeId = null;
   state.level = 1;
   state.score = 0;
-  state.hp = 5;
+  state.hp = state.startHp || 5;
   state.combo = 1;
   state.comboCount = 0;
   state.totalKeys = 0;
@@ -1588,8 +1884,12 @@ function startGame() {
   state.wordsCompleted = 0;
   state.wpmWindow = [];
   state.particles = [];
+  state.freezeEndTime = 0;
   state.running = true;
 
+  gameArea.classList.remove('frost-active');
+  recordForm.classList.add('hidden');
+  startBtn.classList.remove('hidden');
   overlay.classList.add('hidden');
   renderHearts();
   updateHUD();
@@ -1620,6 +1920,7 @@ function gameOver() {
   const wpm = calcWPM();
   const acc = state.totalKeys > 0
     ? Math.round(state.correctKeys / state.totalKeys * 100) : 0;
+  lastGameWpm = wpm;
 
   hideKeyboard();
   blurMobileInput();
@@ -1643,6 +1944,18 @@ function gameOver() {
   highScoreLine.textContent = s.best(newHS.toLocaleString());
   overlay.classList.toggle('rtl', state.language === 'ar');
   overlay.classList.remove('hidden');
+
+  // leaderboard: ask for name if score qualifies for the top-10
+  renderLeaderboard(state.score);
+  if (isTopScore(state.score)) {
+    recordForm.classList.remove('hidden');
+    startBtn.classList.add('hidden');
+    playerNameInput.value = '';
+    if (!isMobile) playerNameInput.focus();
+  } else {
+    recordForm.classList.add('hidden');
+    startBtn.classList.remove('hidden');
+  }
   syncMenuButtons();
 }
 
@@ -1711,7 +2024,94 @@ function resetGame() {
   overlayMode = 'start';
   applyOverlayStrings();
   overlay.classList.remove('hidden');
+  recordForm.classList.add('hidden');
+  startBtn.classList.remove('hidden');
   syncMenuButtons();
+}
+
+// ═══════════════════════════════════════════════════
+//  LEADERBOARD (local storage merged with global JSON)
+// ═══════════════════════════════════════════════════
+const LOCAL_LB_KEY = 'ws_leaderboard';
+let globalLeaders = [];
+let localLeaders = [];
+let lastGameWpm = 0;
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function loadLocalLeaderboard() {
+  try {
+    localLeaders = JSON.parse(localStorage.getItem(LOCAL_LB_KEY)) || [];
+    if (!Array.isArray(localLeaders)) localLeaders = [];
+  } catch (e) {
+    localLeaders = [];
+  }
+  localLeaders.forEach(r => r.score = Number(r.score) || 0);
+}
+
+function loadGlobalLeaderboard() {
+  fetch('leaderboard.json')
+    .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+    .then(data => {
+      globalLeaders = Array.isArray(data) ? data : [];
+      globalLeaders.forEach(r => r.score = Number(r.score) || 0);
+      renderLeaderboard();
+    })
+    .catch(() => {
+      globalLeaders = [];
+      renderLeaderboard();
+    });
+}
+
+function getMergedLeaderboard() {
+  const merged = [...globalLeaders, ...localLeaders];
+  merged.sort((a, b) => (b.score || 0) - (a.score || 0));
+  return merged.slice(0, 10);
+}
+
+function isTopScore(score) {
+  if (score <= 0) return false;
+  const lb = getMergedLeaderboard();
+  if (lb.length < 10) return true;
+  return score > (lb[lb.length - 1].score || 0);
+}
+
+function renderLeaderboard(highlightScore = null) {
+  if (!leaderboardBody) return;
+  const rows = getMergedLeaderboard();
+  leaderboardBody.innerHTML = rows.map((r, i) => {
+    const hl = highlightScore !== null && r.score === highlightScore;
+    return `<tr class="leaderboard-row${hl ? ' highlight' : ''}">
+      <td class="leaderboard-rank">${i + 1}</td>
+      <td class="leaderboard-name">${escapeHtml((r.name || '???').slice(0, 12))}</td>
+      <td class="leaderboard-score">${(r.score || 0).toLocaleString()}</td>
+      <td class="leaderboard-wpm">${Number(r.wpm) || 0}</td>
+      <td class="leaderboard-lvl">${Number(r.level) || 1}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--dim);padding:16px;">—</td></tr>';
+}
+
+function submitRecord() {
+  const raw = playerNameInput.value.trim();
+  const name = (raw || 'PLAYER').slice(0, 12);
+  localLeaders.push({
+    name,
+    score: state.score,
+    level: state.level,
+    wpm: lastGameWpm,
+    lang: state.language,
+    date: new Date().toISOString().slice(0, 10),
+  });
+  localLeaders.sort((a, b) => (b.score || 0) - (a.score || 0));
+  localLeaders = localLeaders.slice(0, 10);
+  localStorage.setItem(LOCAL_LB_KEY, JSON.stringify(localLeaders));
+  recordForm.classList.add('hidden');
+  startBtn.classList.remove('hidden');
+  renderLeaderboard(state.score);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1726,17 +2126,49 @@ btnReset.addEventListener('click', resetGame);
 resumeBtn.addEventListener('click', resumeGame);
 resetFromPauseBtn.addEventListener('click', resetGame);
 
+const btnMute = document.getElementById('btn-mute');
+btnMute.addEventListener('click', () => {
+  state.muted = !state.muted;
+  btnMute.querySelector('.menu-icon').textContent = state.muted ? '🔇' : '🔊';
+  btnMute.classList.toggle('is-active', state.muted);
+});
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.startHp = parseInt(btn.dataset.hp, 10);
+  });
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.running && !state.paused) {
+    pauseGame();
+  }
+});
+
 startBtn.addEventListener('click', startGame);
+submitRecordBtn.addEventListener('click', submitRecord);
+playerNameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); submitRecord(); }
+});
+
+loadLocalLeaderboard();
+loadGlobalLeaderboard();
+renderLeaderboard();
+
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target && e.target.id === 'player-name-input') return; // typing a name
   // Escape — pause or resume
   if (e.key === 'Escape') {
     if (state.running && !state.paused) { pauseGame(); return; }
     if (state.paused) { resumeGame(); return; }
     return;
   }
-  // Enter — start (from overlay) or resume (from pause)
+  // Enter — submit record, start (from overlay) or resume (from pause)
   if (e.key === 'Enter') {
+    if (!recordForm.classList.contains('hidden')) { submitRecord(); return; }
     if (state.paused) { resumeGame(); return; }
     if (!state.running && !overlay.classList.contains('hidden')) { startGame(); return; }
     return;
