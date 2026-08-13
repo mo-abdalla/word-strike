@@ -8,11 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Deployment
 
-**Live (Vercel):** deployed from the `master` branch of `github.com/mo-io/word-strike` (private repo). Vercel auto-redeploys on every push to `master`.
+**Live (Vercel):** deployed from the `master` branch of `github.com/mo-abdalla/word-strike` (private repo). Vercel auto-redeploys on every push to `master`.
 
 `vercel.json` rewrites `/` → `/typing-game.html` so the root URL serves the game (Vercel's static server defaults to `index.html`, which doesn't exist here).
 
-**GitHub:** `git@github.com:mo-io/word-strike.git` — private repo, SSH auth via `C:\Program Files\GitHub CLI\gh.exe` (account: `mo-io`).
+**GitHub:** `https://github.com/mo-abdalla/word-strike.git` — private repo, SSH auth via `C:\Program Files\GitHub CLI\gh.exe` (account: `mo-abdalla`).
 
 ## Running locally
 
