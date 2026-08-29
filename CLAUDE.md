@@ -283,6 +283,18 @@ The entire i18n system is already parameterised. Adding a third language require
 
 A "60 seconds" mode that ends after a fixed duration rather than on HP loss. Needs a countdown timer in the HUD, a new `mode` field in `state`, and a `gameOver()` branch for time-up. The start overlay needs a mode selector (infinite lives vs. timed). Design the UX before implementing.
 
+### Features added (2026-08-18)
+
+**Themes** — `THEMES` array of 4 palettes (Cyber / Synth / Matrix / Vapor). `applyTheme(idx)` writes the `--neon-*` / `--bg` / `--tile-bg` / `--text` / `--dim` custom properties onto `document.documentElement`; everything (tiles, keyboard, particles) recolors automatically because it reads those vars. `cycleTheme()` advances and persists the index to `localStorage` key `ws_theme`. Button `#btn-theme` in `#menu-controls` shows the current theme name.
+
+**Achievements** — `ACHIEVEMENTS` list (id / icon / en / ar). Unlocked set persisted to `localStorage` `ws_ach`; cumulative word count to `ws_words_total`. `unlockAch(id)` is idempotent, fires a toast (`#ach-banner`, z-index 18) and a sound, and is called from `wordComplete` (first_blood, combo8, century), `checkLevelUp` (flawless, level10), and `gameOver` (speedster, perfect). `boss_slayer` unlocks on first boss kill. `renderAchList()` shows chips on the game-over overlay (`#ach-list`).
+
+**Boss Fights** — `isBossLevel()` returns true at level 5 and every 5th level. `checkLevelUp()` calls `startBoss()` instead of `restartSpawnTimer()` on those levels. A boss is a stationary `word-tile.tile-boss` (`speed: 0`) with `state.boss = {id, hp, maxHp, deadline, _pauseLeft}`. Typing the full word chips `boss.hp` and reselects a new word; at 0 HP `endBoss(true)` does a multi-burst, `+500 × maxHp` score, and resumes normal spawns. If the `deadline` (45s) passes, `moveLoop` calls `endBoss(false)` + `loseHp()`. `#boss-bar` (z-index 14) shows HP fill + countdown. `pauseGame()`/`resumeGame()` freeze/unfreeze the deadline via `_pauseLeft` so the timer doesn't run while paused. `moveLoop` skips position updates for tiles with `speed === 0` (so the boss stays centered).
+
+**Share Card** — `buildShareCard()` renders a 600×800 neon result PNG onto an offscreen canvas (reads theme vars via `getComputedStyle`), `showShareCard()` previews it (`#share-preview`) and reveals `#share-row` on the game-over overlay. `#btn-share` uses the Web Share API with files (falls back to download); `#btn-save` downloads `word-strike-result.png`. Canvas `ctx.direction = 'rtl'` is set for Arabic.
+
+**New state fields:** `boss`, `bossActive`, `levelErrors`, `levelWords` (reset in `startGame`, `resetGame`, and on each level-up). **New z-index layers:** `#ach-banner` = 18, `#boss-bar` = 14. **Lifecycle:** every start/reset/gameover now also hides `#ach-banner`, `#boss-bar`, `#share-row`, `#share-preview`, `#ach-list`.
+
 ### Files That Need Attention Next
 
 | File | Why it needs attention |

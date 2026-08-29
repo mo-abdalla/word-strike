@@ -827,6 +827,162 @@
     stroke-width: 1.5;
     fill: rgba(0,245,255,0.04);
   }
+
+  /* ═══════════════════════════════════════════════════
+      THEME SWITCHER
+  ═══════════════════════════════════════════════════ */
+  #theme-cycle {
+    transition: color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+
+  /* ═══════════════════════════════════════════════════
+      ACHIEVEMENT BANNER (toast during play)
+  ═══════════════════════════════════════════════════ */
+  #ach-banner {
+    position: fixed;
+    top: 64px;
+    left: 50%;
+    transform: translate(-50%, -24px);
+    background: rgba(8,8,32,0.96);
+    border: 2px solid var(--neon-yellow);
+    box-shadow: 0 0 30px rgba(255,230,0,0.45);
+    border-radius: 10px;
+    padding: 12px 22px;
+    z-index: 18;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
+    max-width: 90vw;
+  }
+  #ach-banner.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  #ach-banner .ach-icon { font-size: 26px; filter: drop-shadow(0 0 8px var(--neon-yellow)); }
+  #ach-banner .ach-text { display: flex; flex-direction: column; }
+  #ach-banner .ach-kicker {
+    font-size: 9px; letter-spacing: 2px; color: var(--neon-yellow);
+    text-transform: uppercase;
+  }
+  #ach-banner .ach-name {
+    font-size: 15px; font-weight: bold; color: var(--text);
+    text-shadow: 0 0 8px rgba(255,230,0,0.4);
+  }
+  @media (max-width: 520px) { #ach-banner { top: 52px; padding: 10px 16px; } }
+
+  /* Achievements list on game-over overlay */
+  #ach-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 0 0 18px;
+    max-width: 460px;
+  }
+  #ach-list.hidden { display: none; }
+  .ach-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,230,0,0.08);
+    border: 1px solid rgba(255,230,0,0.3);
+    color: var(--neon-yellow);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(255,230,0,0.15);
+  }
+  .ach-chip .ach-chip-icon { font-size: 14px; }
+
+  /* ═══════════════════════════════════════════════════
+      BOSS FIGHT
+  ═══════════════════════════════════════════════════ */
+  .word-tile.tile-boss {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 26px var(--neon-pink), inset 0 0 14px rgba(255,45,120,0.25);
+    color: #fff;
+    font-size: 30px;
+    padding: 14px 22px;
+    letter-spacing: 3px;
+  }
+  .word-tile.tile-boss.active {
+    border-color: var(--neon-yellow);
+    box-shadow: 0 0 34px var(--neon-yellow), inset 0 0 16px rgba(255,230,0,0.2);
+  }
+  #boss-bar {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(420px, 80vw);
+    z-index: 14;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+  #boss-bar.show { display: flex; }
+  #boss-bar .boss-name {
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink);
+  }
+  #boss-bar .boss-track {
+    width: 100%; height: 12px; border-radius: 8px;
+    background: rgba(255,45,120,0.15);
+    border: 1px solid var(--neon-pink);
+    overflow: hidden;
+    box-shadow: 0 0 16px rgba(255,45,120,0.4);
+  }
+  #boss-bar .boss-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-yellow));
+    transition: width 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #boss-bar .boss-timer {
+    font-size: 11px; letter-spacing: 1px; color: var(--dim);
+  }
+
+  /* ═══════════════════════════════════════════════════
+      SHARE CARD ROW (game-over overlay)
+  ═══════════════════════════════════════════════════ */
+  #share-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 4px 0 14px;
+  }
+  #share-row.hidden { display: none; }
+  .share-btn {
+    background: transparent;
+    border: 1px solid var(--neon-purple);
+    color: var(--neon-purple);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 9px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(191,95,255,0.25);
+  }
+  .share-btn:hover {
+    background: rgba(191,95,255,0.12);
+    box-shadow: 0 0 22px rgba(191,95,255,0.6);
+    transform: scale(1.04);
+  }
+  #share-preview {
+    margin: 0 auto 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,245,255,0.25);
+    box-shadow: 0 0 20px rgba(0,245,255,0.2);
+    max-width: 240px;
+    display: none;
+  }
+  #share-preview.show { display: block; }
 </style>
 </head>
 <body>
@@ -878,6 +1034,10 @@
       <span class="menu-icon">🔊</span>
       <span class="menu-label">Sound</span>
     </button>
+    <button class="menu-btn" id="btn-theme" title="Change theme">
+      <span class="menu-icon">🎨</span>
+      <span class="menu-label">Cyber</span>
+    </button>
   </div>
 
   <div id="hearts" style="margin-left:auto">
@@ -905,6 +1065,22 @@
 <div id="level-splash">
   <h2 id="splash-title">Level Up!</h2>
   <p id="splash-sub">Level 2 — Speed increases</p>
+</div>
+
+<!-- Achievement toast -->
+<div id="ach-banner">
+  <span class="ach-icon">🏆</span>
+  <span class="ach-text">
+    <span class="ach-kicker">Achievement Unlocked</span>
+    <span class="ach-name" id="ach-name">—</span>
+  </span>
+</div>
+
+<!-- Boss fight bar -->
+<div id="boss-bar">
+  <span class="boss-name" id="boss-name">BOSS</span>
+  <div class="boss-track"><div class="boss-fill" id="boss-fill"></div></div>
+  <span class="boss-timer" id="boss-timer"></span>
 </div>
 
 <div id="overlay">
@@ -939,6 +1115,16 @@
 
       <button class="big-btn" id="start-btn">Start Game</button>
       <div id="high-score-line"></div>
+
+      <!-- Achievements unlocked (game-over only) -->
+      <div id="ach-list" class="hidden"></div>
+
+      <!-- Share card (game-over only) -->
+      <img id="share-preview" alt="result card">
+      <div id="share-row" class="hidden">
+        <button class="share-btn" id="btn-share">📷 Share</button>
+        <button class="share-btn" id="btn-save">⬇ Save</button>
+      </div>
     </div>
 
     <!-- Leaderboard Sidebar -->
@@ -1168,6 +1354,10 @@ let state = {
   stars: [],
   audioCtx: null,
   freezeEndTime: 0,
+  boss: null,         // {id, hp, maxHp, deadline, _pauseLeft}
+  bossActive: false,
+  levelErrors: 0,     // wrong keys in current level (for flawless achievement)
+  levelWords: 0,      // words completed in current level
 };
 
 // ═══════════════════════════════════════════════════
@@ -1206,6 +1396,20 @@ const leaderboardBody = document.getElementById('leaderboard-body');
 const recordForm = document.getElementById('record-form');
 const playerNameInput = document.getElementById('player-name-input');
 const submitRecordBtn = document.getElementById('submit-record-btn');
+
+// New UI element refs (themes / achievements / boss / share)
+const btnTheme = document.getElementById('btn-theme');
+const achBanner = document.getElementById('ach-banner');
+const achNameEl = document.getElementById('ach-name');
+const achListEl = document.getElementById('ach-list');
+const bossBar = document.getElementById('boss-bar');
+const bossNameEl = document.getElementById('boss-name');
+const bossFillEl = document.getElementById('boss-fill');
+const bossTimerEl = document.getElementById('boss-timer');
+const shareRow = document.getElementById('share-row');
+const sharePreview = document.getElementById('share-preview');
+const btnShare = document.getElementById('btn-share');
+const btnSave = document.getElementById('btn-save');
 
 // ═══════════════════════════════════════════════════
 //  CANVAS RESIZE
@@ -1597,11 +1801,21 @@ function moveLoop(ts) {
 
   for (const id in state.tiles) {
     const t = state.tiles[id];
-    t.x -= t.speed * mult * (dt / 16.67);
-    t.el.style.left = t.x + 'px';
-    if (t.x + (t.el.offsetWidth || 160) < 0) {
-      escapeTile(+id);
-      continue;
+    if (t.speed > 0) {
+      t.x -= t.speed * mult * (dt / 16.67);
+      t.el.style.left = t.x + 'px';
+      if (t.x + (t.el.offsetWidth || 160) < 0) {
+        escapeTile(+id);
+        continue;
+      }
+    }
+  }
+  // boss countdown
+  if (state.bossActive && state.boss) {
+    updateBossBar();
+    if (Date.now() > state.boss.deadline) {
+      endBoss(false);
+      loseHp();
     }
   }
   state.moveRaf = requestAnimationFrame(moveLoop);
@@ -1674,6 +1888,7 @@ function processChar(key) {
   } else {
     flashError(t);
     playError();
+    state.levelErrors++;
   }
   updateHUD();
   updateKeyboardHighlight();
@@ -1739,6 +1954,27 @@ function flashError(t) {
 }
 
 function wordComplete(id, t) {
+  // BOSS: each fully-typed word chips the boss HP instead of destroying the tile
+  if (t.type === 'boss') {
+    state.boss.hp--;
+    updateBossBar();
+    playWordDone();
+    state.comboCount++;
+    if (state.comboCount >= 8) state.combo = 8;
+    else if (state.comboCount >= 4) state.combo = 4;
+    else if (state.comboCount >= 2) state.combo = 2;
+    updateComboDisplay(true);
+    if (state.boss.hp > 0) {
+      const nw = pickWord();
+      t.word = nw;
+      t.typed = 0;
+      t.el.innerHTML = nw.split('').map(c => `<span class="char">${c}</span>`).join('');
+      updateKeyboardHighlight();
+      return;
+    }
+    endBoss(true);
+    return;
+  }
   const points = t.word.length * 10 * state.combo;
   state.score += points;
   state.wordsCompleted++;
@@ -1751,6 +1987,13 @@ function wordComplete(id, t) {
 
   updateComboDisplay(true);
   playWordDone();
+
+  // achievements
+  state.levelWords++;
+  totalWordsEver++;
+  unlockAch('first_blood');
+  if (state.combo === 8) unlockAch('combo8');
+  if (totalWordsEver >= 100) unlockAch('century');
 
   // apply power-up effect
   if (t.type === 'freeze') {
@@ -1845,7 +2088,11 @@ function updateComboDisplay(pop = false) {
 function checkLevelUp() {
   if (state.level >= 10) return;
   if (state.score >= LEVEL_SCORE[state.level + 1]) {
+    // flawless-level achievement for the level just cleared
+    if (state.levelWords > 0 && state.levelErrors === 0) unlockAch('flawless');
     state.level++;
+    state.levelWords = 0;
+    state.levelErrors = 0;
     playLevelUp();
     levelBadge.textContent = state.level === 10 ? '∞ MODE' : `LVL ${state.level}`;
     splashTitle.textContent = state.level === 10 ? 'INFINITE MODE!' : `Level ${state.level}!`;
@@ -1854,7 +2101,9 @@ function checkLevelUp() {
       : `Speed ×${(LEVEL_CFG[state.level].speedPx / LEVEL_CFG[1].speedPx).toFixed(1)} — Words getting longer`;
     levelSplash.classList.add('show');
     setTimeout(() => levelSplash.classList.remove('show'), 1800);
-    restartSpawnTimer();
+    if (state.level >= 10) unlockAch('level10');
+    if (isBossLevel()) { startBoss(); }
+    else { restartSpawnTimer(); }
   }
 }
 
@@ -1885,12 +2134,21 @@ function startGame() {
   state.wpmWindow = [];
   state.particles = [];
   state.freezeEndTime = 0;
+  state.boss = null;
+  state.bossActive = false;
+  state.levelErrors = 0;
+  state.levelWords = 0;
   state.running = true;
 
   gameArea.classList.remove('frost-active');
   recordForm.classList.add('hidden');
   startBtn.classList.remove('hidden');
   overlay.classList.add('hidden');
+  bossBar.classList.remove('show');
+  achBanner.classList.remove('show');
+  shareRow.classList.add('hidden');
+  sharePreview.classList.remove('show');
+  achListEl.classList.add('hidden');
   renderHearts();
   updateHUD();
   updateComboDisplay();
@@ -1916,11 +2174,19 @@ function gameOver() {
   for (const id in state.tiles) { state.tiles[id].el.remove(); }
   state.tiles = {};
   state.activeId = null;
+  state.boss = null;
+  state.bossActive = false;
+  bossBar.classList.remove('show');
 
   const wpm = calcWPM();
   const acc = state.totalKeys > 0
     ? Math.round(state.correctKeys / state.totalKeys * 100) : 0;
   lastGameWpm = wpm;
+
+  // end-of-game achievements
+  if (wpm >= 70) unlockAch('speedster');
+  if (acc === 100 && state.wordsCompleted > 0) unlockAch('perfect');
+  saveAchievements();
 
   hideKeyboard();
   blurMobileInput();
@@ -1956,6 +2222,8 @@ function gameOver() {
     recordForm.classList.add('hidden');
     startBtn.classList.remove('hidden');
   }
+  renderAchList();
+  showShareCard();
   syncMenuButtons();
 }
 
@@ -1991,6 +2259,9 @@ function pauseGame() {
   pauseOverlay.classList.remove('hidden');
   hideKeyboard();
   blurMobileInput();
+  if (state.bossActive && state.boss) {
+    state.boss._pauseLeft = state.boss.deadline - Date.now();
+  }
   syncMenuButtons();
 }
 
@@ -1998,6 +2269,10 @@ function resumeGame() {
   if (!state.paused) return;
   state.paused = false;
   pauseOverlay.classList.add('hidden');
+  if (state.bossActive && state.boss && state.boss._pauseLeft != null) {
+    state.boss.deadline = Date.now() + state.boss._pauseLeft;
+    state.boss._pauseLeft = null;
+  }
   lastMove = performance.now();
   state.moveRaf = requestAnimationFrame(moveLoop);
   restartSpawnTimer();
@@ -2016,9 +2291,16 @@ function resetGame() {
   state.tiles = {};
   state.activeId = null;
   state.particles = [];
+  state.boss = null;
+  state.bossActive = false;
 
   hideKeyboard();
   blurMobileInput();
+  bossBar.classList.remove('show');
+  achBanner.classList.remove('show');
+  shareRow.classList.add('hidden');
+  sharePreview.classList.remove('show');
+  achListEl.classList.add('hidden');
 
   // restore start screen
   overlayMode = 'start';
@@ -2115,6 +2397,256 @@ function submitRecord() {
 }
 
 // ═══════════════════════════════════════════════════
+//  THEMES
+// ═══════════════════════════════════════════════════
+const THEMES = [
+  { name: 'Cyber',  vars: { '--neon-cyan':'#00f5ff','--neon-green':'#39ff14','--neon-pink':'#ff2d78','--neon-yellow':'#ffe600','--neon-purple':'#bf5fff','--bg':'#060610','--tile-bg':'rgba(10,10,40,0.92)','--text':'#e8e8ff','--dim':'#555577' } },
+  { name: 'Synth',  vars: { '--neon-cyan':'#2de2e6','--neon-green':'#39ff14','--neon-pink':'#ff2e97','--neon-yellow':'#ff9e2c','--neon-purple':'#b14aed','--bg':'#160a26','--tile-bg':'rgba(40,16,60,0.92)','--text':'#ffe8ff','--dim':'#7a5a8a' } },
+  { name: 'Matrix', vars: { '--neon-cyan':'#39ff14','--neon-green':'#00ff66','--neon-pink':'#ff3b3b','--neon-yellow':'#aaff00','--neon-purple':'#7CFC00','--bg':'#020a02','--tile-bg':'rgba(6,26,6,0.92)','--text':'#d8ffd8','--dim':'#3a6a3a' } },
+  { name: 'Vapor',  vars: { '--neon-cyan':'#01cdfe','--neon-green':'#05ffa1','--neon-pink':'#ff71ce','--neon-yellow':'#fffb96','--neon-purple':'#b967ff','--bg':'#241046','--tile-bg':'rgba(60,30,100,0.9)','--text':'#fde8ff','--dim':'#9a7ac0' } },
+];
+const THEME_KEY = 'ws_theme';
+function applyTheme(idx) {
+  idx = ((idx % THEMES.length) + THEMES.length) % THEMES.length;
+  const t = THEMES[idx];
+  const root = document.documentElement;
+  for (const k in t.vars) root.style.setProperty(k, t.vars[k]);
+  if (btnTheme) btnTheme.querySelector('.menu-label').textContent = t.name;
+  try { localStorage.setItem(THEME_KEY, String(idx)); } catch (e) {}
+}
+function cycleTheme() {
+  let cur = 0;
+  try { cur = parseInt(localStorage.getItem(THEME_KEY) || '0', 10) || 0; } catch (e) {}
+  applyTheme(cur + 1);
+}
+
+// ═══════════════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════════════
+const ACHIEVEMENTS = [
+  { id:'first_blood', icon:'🩸', en:'First Strike',   ar:'أول ضربة' },
+  { id:'century',     icon:'💯', en:'Centurion',       ar:'المئوي' },
+  { id:'combo8',      icon:'🔥', en:'Combo Master',    ar:'أستاذ الكومبو' },
+  { id:'level10',     icon:'🌌', en:'Infinite Reach',  ar:'الوصول اللانهائي' },
+  { id:'flawless',    icon:'✨', en:'Flawless Level',  ar:'مستوى بلا خطأ' },
+  { id:'perfect',     icon:'🎯', en:'Perfect Game',    ar:'لعبة مثالية' },
+  { id:'speedster',   icon:'⚡', en:'Speedster',       ar:'سريع' },
+  { id:'boss_slayer', icon:'👾', en:'Boss Slayer',    ar:'قاتل الزعماء' },
+];
+const ACH_KEY = 'ws_ach';
+const WORDS_TOTAL_KEY = 'ws_words_total';
+let unlockedAch = {};
+let totalWordsEver = 0;
+function loadAchievements() {
+  try { unlockedAch = JSON.parse(localStorage.getItem(ACH_KEY)) || {}; }
+  catch (e) { unlockedAch = {}; }
+  if (typeof unlockedAch !== 'object' || Array.isArray(unlockedAch)) unlockedAch = {};
+  try { totalWordsEver = parseInt(localStorage.getItem(WORDS_TOTAL_KEY) || '0', 10) || 0; }
+  catch (e) { totalWordsEver = 0; }
+}
+function saveAchievements() {
+  try {
+    localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAch));
+    localStorage.setItem(WORDS_TOTAL_KEY, String(totalWordsEver));
+  } catch (e) {}
+}
+let achBannerTimer = null;
+function unlockAch(id) {
+  if (unlockedAch[id]) return;
+  const def = ACHIEVEMENTS.find(a => a.id === id);
+  if (!def) return;
+  unlockedAch[id] = true;
+  saveAchievements();
+  const name = state.language === 'ar' ? def.ar : def.en;
+  achNameEl.textContent = name;
+  achBanner.querySelector('.ach-icon').textContent = def.icon;
+  achBanner.classList.add('show');
+  if (achBannerTimer) clearTimeout(achBannerTimer);
+  achBannerTimer = setTimeout(() => achBanner.classList.remove('show'), 3200);
+  playTone(880, 'sine', 0.12, 0.16);
+}
+function renderAchList() {
+  const ids = ACHIEVEMENTS.filter(a => unlockedAch[a.id]).map(a => a.id);
+  if (!ids.length) { achListEl.classList.add('hidden'); achListEl.innerHTML = ''; return; }
+  achListEl.classList.remove('hidden');
+  achListEl.innerHTML = ids.map(id => {
+    const def = ACHIEVEMENTS.find(a => a.id === id);
+    const name = state.language === 'ar' ? def.ar : def.en;
+    return `<span class="ach-chip"><span class="ach-chip-icon">${def.icon}</span>${name}</span>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  BOSS FIGHTS
+// ═══════════════════════════════════════════════════
+function isBossLevel() {
+  return state.level >= 5 && state.level % 5 === 0;
+}
+const BOSS_NAMES = {
+  en: ['GLITCH','OVERLORD','MAW','SPECTRE','NEXUS'],
+  ar: ['تشوّه','السيّد','الفك','شبح','النواة'],
+};
+function startBoss() {
+  if (state.bossActive) return;
+  const maxHp = state.level >= 10 ? 6 : 4;
+  state.bossActive = true;
+  clearInterval(state.spawnTimer); // pause normal spawns during boss
+  // clear any on-screen normal tiles
+  for (const id in state.tiles) {
+    if (state.tiles[id].el) state.tiles[id].el.remove();
+  }
+  state.tiles = {};
+  state.activeId = null;
+
+  const id = state.nextId++;
+  const word = pickWord();
+  const el = document.createElement('div');
+  el.className = 'word-tile tile-boss' + (state.language === 'ar' ? ' arabic' : '');
+  el.id = `tile-${id}`;
+  el.innerHTML = word.split('').map(c => `<span class="char">${c}</span>`).join('');
+
+  const hudH = document.getElementById('hud').offsetHeight;
+  const vph = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const y = Math.max((vph - hudH) / 2 - 30, 12);
+  el.style.left = Math.max(window.innerWidth / 2 - 140, 10) + 'px';
+  el.style.top = y + 'px';
+  gameArea.appendChild(el);
+
+  state.tiles[id] = { word, type: 'boss', typed: 0, x: 0, y, el, speed: 0 };
+  selectTile(id);
+
+  state.boss = { id, hp: maxHp, maxHp, deadline: Date.now() + 45000, _pauseLeft: null };
+  const names = BOSS_NAMES[state.language] || BOSS_NAMES.en;
+  bossNameEl.textContent = names[Math.min(names.length - 1, Math.floor(state.level / 5) - 1)] || (state.language === 'ar' ? 'زعيم' : 'BOSS');
+  bossBar.classList.add('show');
+  updateBossBar();
+
+  splashTitle.textContent = state.language === 'ar' ? '⚠ زعيم!' : '⚠ BOSS!';
+  splashSub.textContent = state.language === 'ar' ? 'اكتب الكلمة مراراً لإسقاطه' : 'Type the word repeatedly to bring it down';
+  levelSplash.classList.add('show');
+  setTimeout(() => levelSplash.classList.remove('show'), 1800);
+  playLevelUp();
+}
+function updateBossBar() {
+  if (!state.boss) return;
+  bossFillEl.style.width = (state.boss.hp / state.boss.maxHp) * 100 + '%';
+  bossTimerEl.textContent = Math.max(0, Math.ceil((state.boss.deadline - Date.now()) / 1000)) + 's';
+}
+function endBoss(defeated) {
+  if (!state.bossActive) return;
+  state.bossActive = false;
+  bossBar.classList.remove('show');
+  if (defeated && state.boss) {
+    const t = state.tiles[state.boss.id];
+    if (t) {
+      const rect = t.el.getBoundingClientRect();
+      for (let k = 0; k < 6; k++) {
+        spawnParticles(
+          rect.left + rect.width / 2 + (Math.random() * 90 - 45),
+          rect.top + rect.height / 2 + (Math.random() * 50 - 25)
+        );
+      }
+      t.el.remove();
+      delete state.tiles[state.boss.id];
+    }
+    state.score += 500 * state.boss.maxHp;
+    unlockAch('boss_slayer');
+    playBombSnd();
+  }
+  state.boss = null;
+  state.activeId = null;
+  updateHUD();
+  restartSpawnTimer();
+}
+
+// ═══════════════════════════════════════════════════
+//  SHARE CARD
+// ═══════════════════════════════════════════════════
+let lastShareDataUrl = '';
+function buildShareCard() {
+  const c = document.createElement('canvas');
+  c.width = 600; c.height = 800;
+  const ctx = c.getContext('2d');
+  const cs = getComputedStyle(document.documentElement);
+  const cyan = cs.getPropertyValue('--neon-cyan').trim() || '#00f5ff';
+  const pink = cs.getPropertyValue('--neon-pink').trim() || '#ff2d78';
+  const purple = cs.getPropertyValue('--neon-purple').trim() || '#bf5fff';
+  const yellow = cs.getPropertyValue('--neon-yellow').trim() || '#ffe600';
+  const bg = cs.getPropertyValue('--bg').trim() || '#060610';
+  const text = cs.getPropertyValue('--text').trim() || '#e8e8ff';
+
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= c.width; i += 30) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, c.height); ctx.stroke(); }
+  for (let i = 0; i <= c.height; i += 30) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(c.width, i); ctx.stroke(); }
+
+  const isAr = state.language === 'ar';
+  ctx.textAlign = 'center';
+  if (isAr) ctx.direction = 'rtl';
+
+  const title = isAr ? 'اضرب الكلمة' : 'WORD STRIKE';
+  const grad = ctx.createLinearGradient(40, 0, c.width - 40, 0);
+  grad.addColorStop(0, cyan); grad.addColorStop(0.5, purple); grad.addColorStop(1, pink);
+  ctx.fillStyle = grad;
+  ctx.font = 'bold 56px "Courier New", monospace';
+  ctx.fillText(title, c.width / 2, 110);
+  ctx.fillStyle = text;
+  ctx.font = '20px "Courier New", monospace';
+  ctx.fillText(isAr ? 'نتيجتك' : 'YOUR RUN', c.width / 2, 158);
+
+  const wpm = calcWPM();
+  const acc = state.totalKeys > 0 ? Math.round(state.correctKeys / state.totalKeys * 100) : 0;
+  const stats = [
+    [isAr ? 'النتيجة' : 'SCORE', state.score.toLocaleString()],
+    [isAr ? 'ك/د' : 'WPM', String(wpm)],
+    [isAr ? 'الدقة' : 'ACC', acc + '%'],
+    [isAr ? 'الكلمات' : 'WORDS', String(state.wordsCompleted)],
+    [isAr ? 'المستوى' : 'LEVEL', state.level >= 10 ? '∞' : String(state.level)],
+  ];
+  let y = 250;
+  stats.forEach(([label, val]) => {
+    ctx.fillStyle = '#8888aa';
+    ctx.font = '18px "Courier New", monospace';
+    ctx.fillText(label, c.width / 2, y);
+    ctx.fillStyle = cyan;
+    ctx.font = 'bold 40px "Courier New", monospace';
+    ctx.fillText(val, c.width / 2, y + 44);
+    y += 100;
+  });
+
+  ctx.fillStyle = yellow;
+  ctx.font = '16px "Courier New", monospace';
+  ctx.fillText('word-strike.app', c.width / 2, c.height - 36);
+  return c.toDataURL('image/png');
+}
+function showShareCard() {
+  lastShareDataUrl = buildShareCard();
+  sharePreview.src = lastShareDataUrl;
+  sharePreview.classList.add('show');
+  shareRow.classList.remove('hidden');
+}
+function downloadShareCard() {
+  if (!lastShareDataUrl) lastShareDataUrl = buildShareCard();
+  const a = document.createElement('a');
+  a.href = lastShareDataUrl;
+  a.download = 'word-strike-result.png';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function shareShareCard() {
+  if (!lastShareDataUrl) lastShareDataUrl = buildShareCard();
+  try {
+    const blob = await (await fetch(lastShareDataUrl)).blob();
+    const file = new File([blob], 'word-strike-result.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Word Strike', text: 'My Word Strike run!' });
+      return;
+    }
+  } catch (e) { /* fall through to download */ }
+  downloadShareCard();
+}
+
+// ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
 btnStart.addEventListener('click', () => {
@@ -2156,6 +2688,17 @@ playerNameInput.addEventListener('keydown', e => {
 loadLocalLeaderboard();
 loadGlobalLeaderboard();
 renderLeaderboard();
+
+// ── NEW FEATURE INIT (themes / achievements / share) ──
+loadAchievements();
+(function initTheme() {
+  let idx = 0;
+  try { idx = parseInt(localStorage.getItem(THEME_KEY) || '0', 10) || 0; } catch (e) {}
+  applyTheme(idx);
+})();
+btnTheme.addEventListener('click', cycleTheme);
+btnShare.addEventListener('click', shareShareCard);
+btnSave.addEventListener('click', downloadShareCard);
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
