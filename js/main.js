@@ -1,7 +1,8 @@
 // js/main.js
 // Wires logic, rendering, input and screens together.
 import { createPhaseMachine } from './state.js';
-import { createRun, resize as resizeRun, startWave, update, onChar, onBackspace } from './game.js';
+import { createRun, resize as resizeRun, startWave, update, onChar, onBackspace, triggerNova } from './game.js';
+import { drawUpgrades, applyUpgrade } from './upgrades.js';
 import { wordsFor } from './words.js';
 import { accuracy, finalWpm } from './scoring.js';
 import { applyStrings, t } from './i18n.js';
@@ -13,8 +14,10 @@ import { drawShip, drawHpRing, aimAngle } from './render/ship.js';
 import { drawEnemy } from './render/enemies.js';
 import { createFx } from './render/fx.js';
 import { createLabels } from './render/labels.js';
+import { createCards } from './render/cards.js';
 
 const BANNER_SEC = 1.5;
+const PICK_FLASH_SEC = 0.35;
 const HIGH_SCORE_KEY = 'ws_hs';
 
 const $ = id => document.getElementById(id);
@@ -23,13 +26,16 @@ const gctx = gameCanvas.getContext('2d');
 const starfield = createStarfield($('bg'));
 const labels = createLabels($('labels'));
 const fx = createFx();
+const cards = createCards($('upgrade-cards'), pickUpgrade);
 
 let lang = 'en';
 let run = null;
 let width = 0;
 let height = 0;
 let bannerTimer = 0;
-let nextWaveTimer = 0;
+let offered = [];
+let pickedIndex = -1;
+let pickTimer = 0;
 let best = load(HIGH_SCORE_KEY, 0);
 let colors = readColors();
 
@@ -47,7 +53,8 @@ const phase = createPhaseMachine(next => {
   $('screen-menu').hidden = next !== 'menu';
   $('screen-pause').hidden = next !== 'paused';
   $('screen-gameover').hidden = next !== 'gameover';
-  $('hud').hidden = !(next === 'playing' || next === 'paused');
+  $('screen-upgrade').hidden = next !== 'upgradePick';
+  $('hud').hidden = !(next === 'playing' || next === 'paused' || next === 'upgradePick');
   if (next === 'menu') {
     labels.clear();
     run = null;
@@ -83,7 +90,6 @@ function showBanner(text) {
 
 function newRun() {
   labels.clear();
-  nextWaveTimer = 0;
   run = createRun({ lang, words: wordsFor(lang), width, height });
   startWave(run, 1);
   showBanner(t(lang, 'waveBanner', 1));
@@ -103,15 +109,37 @@ function endRun() {
   phase.set('gameover');
 }
 
+function openUpgrades() {
+  offered = drawUpgrades(run);
+  pickedIndex = -1;
+  $('upgrade-title').textContent = t(lang, 'waveClear', run.wave);
+  cards.show(offered, lang, rarity => t(lang, rarity));
+  phase.set('upgradePick');
+}
+
+function pickUpgrade(index) {
+  if (phase.get() !== 'upgradePick' || pickedIndex !== -1 || index >= offered.length) return;
+  pickedIndex = index;
+  pickTimer = PICK_FLASH_SEC;
+  cards.flash(index);
+}
+
+function finishPick() {
+  applyUpgrade(run, offered[pickedIndex].id);
+  startWave(run, run.wave + 1);
+  showBanner(t(lang, 'waveBanner', run.wave));
+  phase.set('playing');
+}
+
 function drainEvents() {
   for (const ev of run.events) {
     if (ev.type === 'shot') fx.beam(run.ship, ev);
-    else if (ev.type === 'kill' || ev.type === 'hurt') fx.burst(ev.x, ev.y);
+    else if (ev.type === 'kill' || ev.type === 'hurt' || ev.type === 'novaHit') fx.burst(ev.x, ev.y);
+    else if (ev.type === 'zap') fx.zap(ev.from, ev.to);
+    else if (ev.type === 'pulse') fx.burst(run.ship.x, run.ship.y);
     else if (ev.type === 'miss' && ev.id !== null) labels.flashMiss(ev.id);
-    else if (ev.type === 'waveClear') {
-      showBanner(t(lang, 'waveClear', ev.wave));
-      nextWaveTimer = BANNER_SEC;
-    } else if (ev.type === 'gameOver') endRun();
+    else if (ev.type === 'waveClear') openUpgrades();
+    else if (ev.type === 'gameOver') endRun();
   }
   run.events.length = 0;
 }
@@ -131,12 +159,16 @@ function drawRun() {
   const combo = $('hud-combo');
   combo.textContent = run.combo > 1 ? `×${run.combo}` : '';
   combo.style.transform = `translate(${run.ship.x + 48}px, ${run.ship.y - 12}px)`;
+  const nova = $('hud-nova');
+  nova.hidden = !run.novaReady;
+  nova.style.transform = `translate(${run.ship.x - 64}px, ${run.ship.y - 12}px)`;
 }
 
 function frame(dt) {
   starfield.draw(dt, colors);
   gctx.clearRect(0, 0, width, height);
-  const playing = phase.get() === 'playing';
+  const p = phase.get();
+  const playing = p === 'playing';
 
   if (playing && bannerTimer > 0) {
     bannerTimer -= dt;
@@ -144,17 +176,14 @@ function frame(dt) {
   }
   if (run && playing) {
     update(run, dt);
-    if (nextWaveTimer > 0) {
-      nextWaveTimer -= dt;
-      if (nextWaveTimer <= 0) {
-        startWave(run, run.wave + 1);
-        showBanner(t(lang, 'waveBanner', run.wave));
-      }
-    }
     drainEvents();
   }
+  if (p === 'upgradePick' && pickedIndex !== -1) {
+    pickTimer -= dt;
+    if (pickTimer <= 0) finishPick();
+  }
 
-  fx.update(phase.get() === 'paused' ? 0 : dt);
+  fx.update(p === 'paused' ? 0 : dt);
   if (run) drawRun();
   fx.draw(gctx, colors);
 }
@@ -166,7 +195,10 @@ function handleKey(key) {
   } else if (p === 'playing') {
     if (key === 'Escape') phase.set('paused');
     else if (key === 'Backspace') onBackspace(run);
-    else if (key !== 'Enter' && key !== ' ') onChar(run, key);
+    else if (key === 'Enter') triggerNova(run);
+    else if (key !== ' ') onChar(run, key);
+  } else if (p === 'upgradePick') {
+    if (key === '1' || key === '2' || key === '3') pickUpgrade(Number(key) - 1);
   } else if (p === 'paused') {
     if (key === 'Escape' || key === 'Enter') phase.set('playing');
     else if (key === 'r' || key === 'R') phase.set('menu');

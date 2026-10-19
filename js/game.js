@@ -1,9 +1,10 @@
 // js/game.js
-// One run: spawning, movement, collisions, kills. Pure logic; the browser layer drains run.events.
+// One run: spawning, movement, collisions, kills and upgrade effects.
+// Pure logic; the browser layer drains run.events. Effects read run.mods only.
 import { waveConfig, pickEnemyType, tierForType, pickWord } from './waves.js';
 import { ENEMY_TYPES, createEnemy, updateEnemy, reachedShip, splitChildren } from './enemies.js';
-import { handleChar, releaseLock } from './targeting.js';
-import { registerKill, registerMiss } from './scoring.js';
+import { handleChar, lockedEnemy, releaseLock } from './targeting.js';
+import { registerKill, registerAssistKill, registerMiss } from './scoring.js';
 
 export const START_HP = 5;
 const SPAWN_MARGIN = 60;
@@ -11,6 +12,20 @@ const SPAWN_Y = -20;
 const SHIP_OFFSET = 70;
 const REFERENCE_HEIGHT = 800;
 const WPM_WINDOW_SEC = 10;
+const SLOW_ZONE = 2 / 3;
+const SLOW_STEP = 0.2;
+const CHAIN_MIN_COMBO = 4;
+const TURRET_SEC = 10;
+const PULSE_EVERY = 15;
+const PULSE_SEC = 2;
+const OVERDRIVE_WPM = 60;
+
+export function createMods() {
+  return {
+    magnet: 0, shortCircuit: 0, slowField: 0, focus: 0, comboGuard: 0,
+    chain: 0, turret: 0, pulse: 0, overdrive: 0, nova: 0,
+  };
+}
 
 export function createRun({ lang, words, width, height, rand = Math.random }) {
   return {
@@ -23,7 +38,8 @@ export function createRun({ lang, words, width, height, rand = Math.random }) {
     enemies: [], nextId: 1, lockId: null,
     wave: 0, toSpawn: 0, spawnTimer: 0, cfg: null,
     waveCleared: false, over: false,
-    mods: { magnet: 0, shortCircuit: 0 },
+    mods: createMods(), picked: [],
+    guardsLeft: 0, novaReady: false, turretTimer: 0, pulseKills: 0, freezeTimer: 0,
     events: [],
   };
 }
@@ -35,12 +51,18 @@ export function resize(run, width, height) {
   run.ship.y = height - SHIP_OFFSET;
 }
 
+const turretInterval = run => (run.mods.turret ? TURRET_SEC / run.mods.turret : 0);
+
 export function startWave(run, n) {
   run.wave = n;
   run.cfg = waveConfig(n);
   run.toSpawn = run.cfg.count;
   run.spawnTimer = 0;
   run.waveCleared = false;
+  run.guardsLeft = run.mods.comboGuard;
+  run.novaReady = run.mods.nova > 0;
+  run.turretTimer = turretInterval(run);
+  run.freezeTimer = 0;
   run.events.push({ type: 'waveStart', wave: n });
 }
 
@@ -69,11 +91,11 @@ function hurt(run, e) {
   }
 }
 
-function kill(run, e) {
+// Every way a word can be finished ends here: typing, chain or turret.
+function destroy(run, e, points) {
   e.dead = true;
-  releaseLock(run);
+  if (run.lockId === e.id) releaseLock(run);
   run.kills += 1;
-  const points = registerKill(run, e.word.length);
   run.events.push({ type: 'kill', id: e.id, x: e.x, y: e.y, enemyType: e.type, points });
   if (e.type === 'splitter' && !run.mods.shortCircuit) {
     const taken = onScreenWords(run);
@@ -81,6 +103,57 @@ function kill(run, e) {
     const w2 = pickWord(run.words[1], [...taken, w1], run.rand);
     run.enemies.push(...splitChildren(e, [w1, w2], [run.nextId++, run.nextId++], run.ship));
   }
+  if (run.mods.pulse) {
+    run.pulseKills += 1;
+    if (run.pulseKills >= PULSE_EVERY) {
+      run.pulseKills = 0;
+      run.freezeTimer = PULSE_SEC;
+      run.events.push({ type: 'pulse' });
+    }
+  }
+}
+
+// Upgrades remove letters as if typed. Finishing the word kills at the current combo.
+function strip(run, e, letters) {
+  e.typed = Math.min(e.word.length, e.typed + letters);
+  if (e.typed === e.word.length) destroy(run, e, registerAssistKill(run, e.word.length));
+}
+
+function closestToShip(run) {
+  let best = null;
+  for (const e of alive(run)) if (!best || e.y > best.y) best = e;
+  return best;
+}
+
+// Speed of the final lock on this word: letters typed since locking, over the time since locking.
+function wordWpm(e, now) {
+  const minutes = (now - e.lockAt) / 60;
+  return minutes > 0 ? e.lockChars / 5 / minutes : Infinity;
+}
+
+function kill(run, e) {
+  const clean = e.lockMisses === 0 && wordWpm(e, run.time) >= OVERDRIVE_WPM;
+  const points = registerKill(run, e.word.length, run.mods.overdrive && clean ? 2 : 1);
+  destroy(run, e, points);
+  if (run.mods.chain && run.combo >= CHAIN_MIN_COMBO) {
+    const target = closestToShip(run);
+    if (target) {
+      run.events.push({ type: 'zap', from: { x: e.x, y: e.y }, to: { x: target.x, y: target.y } });
+      strip(run, target, run.mods.chain);
+    }
+  }
+}
+
+function fireTurret(run, dt) {
+  if (!run.mods.turret) return;
+  run.turretTimer -= dt;
+  if (run.turretTimer > 0) return;
+  const targets = alive(run).filter(e => e.id !== run.lockId);
+  if (!targets.length) return;
+  const e = targets[Math.floor(run.rand() * targets.length)];
+  run.events.push({ type: 'zap', from: { x: run.ship.x, y: run.ship.y }, to: { x: e.x, y: e.y } });
+  strip(run, e, 1);
+  run.turretTimer = turretInterval(run);
 }
 
 export function update(run, dt) {
@@ -94,9 +167,15 @@ export function update(run, dt) {
     run.spawnTimer = run.cfg.spawnInterval;
   }
 
+  fireTurret(run, dt);
+
+  const frozen = run.freezeTimer > 0;
+  run.freezeTimer = Math.max(0, run.freezeTimer - dt);
+  const slow = 1 - SLOW_STEP * run.mods.slowField;
   for (const e of run.enemies) {
-    if (e.dead) continue;
-    updateEnemy(e, dt, run.ship);
+    if (e.dead || frozen) continue;
+    if (run.mods.focus && e.id === run.lockId) continue;
+    updateEnemy(e, e.y > run.height * SLOW_ZONE ? dt * slow : dt, run.ship);
     if (reachedShip(e, run.ship)) hurt(run, e);
     if (run.over) break;
   }
@@ -111,18 +190,40 @@ export function update(run, dt) {
 export function onChar(run, key) {
   if (run.over || run.waveCleared) return;
   run.totalKeys += 1;
+  const before = lockedEnemy(run);
   const res = handleChar(run, key);
   if (res.kind === 'miss') {
-    registerMiss(run);
+    if (res.enemy) res.enemy.lockMisses += 1;
+    if (run.guardsLeft > 0) run.guardsLeft -= 1;
+    else registerMiss(run);
     run.events.push({ type: 'miss', id: res.enemy ? res.enemy.id : null });
     return;
   }
+  const e = res.enemy;
+  if (e !== before) {
+    e.lockAt = run.time;
+    e.lockChars = 0;
+    e.lockMisses = 0;
+  }
+  e.lockChars += 1;
   run.correctKeys += 1;
   run.samples.push({ t: run.time, chars: 1 });
-  run.events.push({ type: 'shot', id: res.enemy.id, x: res.enemy.x, y: res.enemy.y });
-  if (res.kind === 'kill') kill(run, res.enemy);
+  run.events.push({ type: 'shot', id: e.id, x: e.x, y: e.y });
+  if (res.kind === 'kill') kill(run, e);
 }
 
 export function onBackspace(run) {
   releaseLock(run);
+}
+
+// Nova: wipes every enemy on screen, once per wave. No points, no kills, no splitting.
+export function triggerNova(run) {
+  if (!run.novaReady || run.over || run.waveCleared) return;
+  run.novaReady = false;
+  releaseLock(run);
+  for (const e of alive(run)) {
+    e.dead = true;
+    run.events.push({ type: 'novaHit', x: e.x, y: e.y });
+  }
+  run.events.push({ type: 'nova' });
 }

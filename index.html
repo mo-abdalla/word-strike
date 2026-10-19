@@ -17,6 +17,7 @@
     <div class="hud-wave"><span class="hud-label" data-i18n="wave"></span><span id="hud-wave">1</span></div>
     <div class="hud-best"><span class="hud-label" data-i18n="best"></span><span id="hud-best">0</span></div>
     <div id="hud-combo"></div>
+    <div id="hud-nova" hidden>✸</div>
   </div>
 
   <div id="wave-banner" hidden></div>
@@ -35,6 +36,12 @@
     <h2 data-i18n="paused"></h2>
     <button id="btn-resume" class="btn-primary"><span data-i18n="resume"></span><kbd>Esc</kbd></button>
     <button id="btn-pause-menu" class="btn-secondary"><span data-i18n="menu"></span><kbd>R</kbd></button>
+  </section>
+
+  <section id="screen-upgrade" class="screen screen-clear" hidden>
+    <h2 id="upgrade-title" class="upgrade-title"></h2>
+    <p class="tagline" data-i18n="pickUpgrade"></p>
+    <div id="upgrade-cards" class="cards"></div>
   </section>
 
   <section id="screen-gameover" class="screen" hidden>

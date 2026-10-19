@@ -12,11 +12,20 @@ export function wordPoints(length, combo, multiplier = 1) {
   return Math.round(length * 10 * combo * multiplier);
 }
 
-export function registerKill(run, wordLength) {
+const magnetMultiplier = run => 1 + 0.2 * run.mods.magnet;
+
+export function registerKill(run, wordLength, bonus = 1) {
   run.streak += 1;
   run.combo = comboFor(run.streak);
   run.maxCombo = Math.max(run.maxCombo, run.combo);
-  const points = wordPoints(wordLength, run.combo, 1 + 0.2 * run.mods.magnet);
+  const points = wordPoints(wordLength, run.combo, magnetMultiplier(run) * bonus);
+  run.score += points;
+  return points;
+}
+
+// A word finished by an upgrade (chain, turret): scores at the current combo without growing it.
+export function registerAssistKill(run, wordLength) {
+  const points = wordPoints(wordLength, run.combo, magnetMultiplier(run));
   run.score += points;
   return points;
 }

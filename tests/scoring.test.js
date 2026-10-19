@@ -1,7 +1,7 @@
 // tests/scoring.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { comboFor, wordPoints, registerKill, registerMiss, accuracy, rollingWpm, finalWpm } from '../js/scoring.js';
+import { comboFor, wordPoints, registerKill, registerAssistKill, registerMiss, accuracy, rollingWpm, finalWpm } from '../js/scoring.js';
 
 const freshRun = () => ({ streak: 0, combo: 1, maxCombo: 1, score: 0, mods: { magnet: 0 } });
 
@@ -51,4 +51,18 @@ test('rolling wpm uses the last 10 seconds only', () => {
 test('final wpm', () => {
   assert.equal(finalWpm(300, 60), 60);
   assert.equal(finalWpm(10, 0), 0);
+});
+
+test('registerKill applies a bonus multiplier', () => {
+  const run = freshRun();
+  run.mods.magnet = 2;
+  assert.equal(registerKill(run, 5, 2), 140);
+});
+
+test('assist kill scores at the current combo without growing it', () => {
+  const run = { ...freshRun(), streak: 4, combo: 4, maxCombo: 4 };
+  assert.equal(registerAssistKill(run, 3), 120);
+  assert.equal(run.streak, 4);
+  assert.equal(run.combo, 4);
+  assert.equal(run.score, 120);
 });
