@@ -41,6 +41,7 @@ export function createRun({ lang, words, width, height, rand = Math.random }) {
     waveCleared: false, over: false,
     mods: createMods(), picked: [],
     guardsLeft: 0, novaReady: false, turretTimer: 0, pulseKills: 0, freezeTimer: 0,
+    waveMisses: 0, wavesCleared: 0, flawlessWaves: 0, bossKills: 0,
     events: [],
   };
 }
@@ -66,6 +67,7 @@ export function startWave(run, n) {
   run.novaReady = run.mods.nova > 0;
   run.turretTimer = turretInterval(run);
   run.freezeTimer = 0;
+  run.waveMisses = 0;
   run.events.push({ type: 'waveStart', wave: n });
   if (isBossWave(n)) {
     run.toSpawn = 0;
@@ -167,6 +169,7 @@ function hitBoss(run, boss, points) {
       run.events.push({ type: 'pop', x: m.x, y: m.y });
     }
     releaseLock(run);
+    run.bossKills += 1;
     run.events.push({ type: 'bossDown', x: boss.x, y: boss.y, points: BOSS_REWARD * boss.maxHp });
   }
   countKill(run);
@@ -249,6 +252,8 @@ export function update(run, dt) {
 
   if (!run.over && !run.waveCleared && run.toSpawn === 0 && run.enemies.length === 0) {
     run.waveCleared = true;
+    run.wavesCleared += 1;
+    if (run.waveMisses === 0) run.flawlessWaves += 1;
     run.events.push({ type: 'waveClear', wave: run.wave });
   }
 }
@@ -259,6 +264,7 @@ export function onChar(run, key) {
   const before = lockedEnemy(run);
   const res = handleChar(run, key);
   if (res.kind === 'miss') {
+    run.waveMisses += 1;
     if (res.enemy) res.enemy.lockMisses += 1;
     if (run.guardsLeft > 0) run.guardsLeft -= 1;
     else registerMiss(run);
