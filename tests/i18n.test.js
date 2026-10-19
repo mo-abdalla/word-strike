@@ -22,3 +22,10 @@ test('boss strings', () => {
   assert.equal(t('en', 'bossBanner', 5), 'Boss — Wave 5');
   assert.equal(t('ar', 'bossDown'), 'الزعيم سقط');
 });
+
+test('menu, panel and game-over strings', () => {
+  assert.equal(t('en', 'bestLine', '1,200', 7), 'Best 1,200 · Wave 7');
+  assert.equal(t('ar', 'bestLine', '900', 0), 'الأفضل 900');
+  assert.equal(t('ar', 'newRecord'), 'رقم قياسيّ جديد!');
+  assert.equal(t('ar', 'share'), 'شارك النتيجة');
+});
