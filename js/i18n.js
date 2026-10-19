@@ -22,6 +22,8 @@ export const STRINGS = {
     common: 'Common',
     rare: 'Rare',
     epic: 'Epic',
+    bossBanner: n => `Boss — Wave ${n}`,
+    bossDown: 'Boss destroyed',
   },
   ar: {
     tagline: 'اكتب لتطلق النار',
@@ -43,6 +45,8 @@ export const STRINGS = {
     common: 'عاديّة',
     rare: 'نادرة',
     epic: 'ملحميّة',
+    bossBanner: n => `الزعيم — الموجة ${n}`,
+    bossDown: 'الزعيم سقط',
   },
 };
 

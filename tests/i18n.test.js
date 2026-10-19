@@ -17,3 +17,8 @@ test('upgrade screen strings', () => {
   assert.equal(t('ar', 'pickUpgrade'), 'اختر ترقية');
   assert.equal(t('en', 'epic'), 'Epic');
 });
+
+test('boss strings', () => {
+  assert.equal(t('en', 'bossBanner', 5), 'Boss — Wave 5');
+  assert.equal(t('ar', 'bossDown'), 'الزعيم سقط');
+});
