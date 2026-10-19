@@ -23,6 +23,7 @@
   <div id="wave-banner" hidden></div>
 
   <section id="screen-menu" class="screen">
+    <svg class="menu-ship" viewBox="-24 -26 48 48" aria-hidden="true"><path d="M0 -22 L16 16 L0 8 L-16 16 Z"/></svg>
     <h1 class="title">WORD STRIKE</h1>
     <p class="tagline" data-i18n="tagline"></p>
     <div class="lang-switch">
@@ -30,6 +31,20 @@
       <button class="lang-btn" data-lang="ar">العربيّة</button>
     </div>
     <button id="btn-start" class="btn-primary"><span data-i18n="start"></span><kbd>Enter</kbd></button>
+    <div class="menu-row">
+      <button id="btn-leaderboard" class="btn-secondary" data-i18n="leaderboard"></button>
+      <button id="btn-achievements" class="btn-secondary" data-i18n="achievements"></button>
+      <button id="btn-theme" class="btn-secondary"><span data-i18n="theme"></span> · <span id="theme-name"></span></button>
+    </div>
+    <p id="best-line" class="best-line"></p>
+  </section>
+
+  <section id="panel" class="panel-backdrop" hidden>
+    <div class="panel">
+      <h2 id="panel-title" class="panel-title"></h2>
+      <div id="panel-body" class="panel-body"></div>
+      <button id="btn-panel-close" class="btn-secondary"><span data-i18n="close"></span><kbd>Esc</kbd></button>
+    </div>
   </section>
 
   <section id="screen-pause" class="screen" hidden>
@@ -47,15 +62,27 @@
   <section id="screen-gameover" class="screen" hidden>
     <h2 class="danger" data-i18n="gameOver"></h2>
     <div id="final-score" class="final-score">0</div>
+    <div id="new-record" class="new-record" data-i18n="newRecord" hidden></div>
     <div class="final-stats">
       <div><b id="final-wave">0</b><span data-i18n="wave"></span></div>
       <div><b id="final-wpm">0</b><span data-i18n="wpm"></span></div>
       <div><b id="final-acc">0%</b><span data-i18n="accuracy"></span></div>
       <div><b id="final-combo">×1</b><span data-i18n="maxCombo"></span></div>
     </div>
-    <button id="btn-again" class="btn-primary"><span data-i18n="playAgain"></span><kbd>Enter</kbd></button>
-    <button id="btn-over-menu" class="btn-secondary"><span data-i18n="menu"></span><kbd>R</kbd></button>
+    <div id="final-upgrades" class="chips" hidden></div>
+    <div id="final-ach" class="chips" hidden></div>
+    <form id="record-form" class="record-form" hidden>
+      <input id="record-name" maxlength="12" autocomplete="off" spellcheck="false">
+      <button class="btn-secondary" data-i18n="saveScore"></button>
+    </form>
+    <div class="over-buttons">
+      <button id="btn-again" class="btn-primary"><span data-i18n="playAgain"></span><kbd>Enter</kbd></button>
+      <button id="btn-share" class="btn-secondary" data-i18n="share"></button>
+      <button id="btn-over-menu" class="btn-secondary"><span data-i18n="menu"></span><kbd>R</kbd></button>
+    </div>
   </section>
+
+  <div id="ach-toast" class="ach-toast" hidden><span id="ach-toast-icon"></span><span><small data-i18n="achievementUnlocked"></small><b id="ach-toast-name"></b></span></div>
 
   <script type="module" src="js/main.js"></script>
 </body>
