@@ -12,3 +12,8 @@ test('t returns plain and formatted strings', () => {
   assert.equal(t('en', 'waveBanner', 3), 'Wave 3');
   assert.equal(t('ar', 'waveClear', 7), 'الموجة 7 اكتملت');
 });
+
+test('upgrade screen strings', () => {
+  assert.equal(t('ar', 'pickUpgrade'), 'اختر ترقية');
+  assert.equal(t('en', 'epic'), 'Epic');
+});

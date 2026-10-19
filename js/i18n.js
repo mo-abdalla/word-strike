@@ -18,6 +18,10 @@ export const STRINGS = {
     maxCombo: 'Max combo',
     waveBanner: n => `Wave ${n}`,
     waveClear: n => `Wave ${n} cleared`,
+    pickUpgrade: 'Pick an upgrade',
+    common: 'Common',
+    rare: 'Rare',
+    epic: 'Epic',
   },
   ar: {
     tagline: 'اكتب لتطلق النار',
@@ -35,6 +39,10 @@ export const STRINGS = {
     maxCombo: 'أعلى كومبو',
     waveBanner: n => `الموجة ${n}`,
     waveClear: n => `الموجة ${n} اكتملت`,
+    pickUpgrade: 'اختر ترقية',
+    common: 'عاديّة',
+    rare: 'نادرة',
+    epic: 'ملحميّة',
   },
 };
 
