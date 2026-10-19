@@ -154,7 +154,7 @@ function frame(dt) {
     drainEvents();
   }
 
-  fx.update(playing ? dt : 0);
+  fx.update(phase.get() === 'paused' ? 0 : dt);
   if (run) drawRun();
   fx.draw(gctx, colors);
 }
