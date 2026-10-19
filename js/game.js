@@ -1,10 +1,11 @@
 // js/game.js
-// One run: spawning, movement, collisions, kills and upgrade effects.
+// One run: spawning, movement, collisions, kills, upgrade effects and boss waves.
 // Pure logic; the browser layer drains run.events. Effects read run.mods only.
-import { waveConfig, pickEnemyType, tierForType, pickWord } from './waves.js';
+import { waveConfig, pickEnemyType, tierForType, pickWord, isBossWave } from './waves.js';
 import { ENEMY_TYPES, createEnemy, updateEnemy, reachedShip, splitChildren } from './enemies.js';
 import { handleChar, lockedEnemy, releaseLock } from './targeting.js';
 import { registerKill, registerAssistKill, registerMiss } from './scoring.js';
+import { BOSS_Y, BOSS_REWARD, MISSILE_SPEED_MUL, bossHp, fireInterval, bossWordTier, missileLetters, missileSpawn } from './boss.js';
 
 export const START_HP = 5;
 const SPAWN_MARGIN = 60;
@@ -49,6 +50,8 @@ export function resize(run, width, height) {
   run.height = height;
   run.ship.x = width / 2;
   run.ship.y = height - SHIP_OFFSET;
+  const boss = bossOf(run);
+  if (boss) boss.x = width / 2;
 }
 
 const turretInterval = run => (run.mods.turret ? TURRET_SEC / run.mods.turret : 0);
@@ -64,17 +67,50 @@ export function startWave(run, n) {
   run.turretTimer = turretInterval(run);
   run.freezeTimer = 0;
   run.events.push({ type: 'waveStart', wave: n });
+  if (isBossWave(n)) {
+    run.toSpawn = 0;
+    spawnBoss(run);
+  }
 }
 
 const alive = run => run.enemies.filter(e => !e.dead);
 const onScreenWords = run => alive(run).map(e => e.word);
+const bossOf = run => run.enemies.find(e => e.type === 'boss' && !e.dead) || null;
+
+function speedFor(run, mul) {
+  return run.cfg.baseSpeed * mul * (run.height / REFERENCE_HEIGHT);
+}
+
+function spawnBoss(run) {
+  const hp = bossHp(run.wave);
+  const word = pickWord(run.words[bossWordTier(run.rand)], onScreenWords(run), run.rand);
+  const boss = createEnemy({ id: run.nextId++, type: 'boss', word, x: run.width / 2, y: BOSS_Y, speed: 0, target: run.ship });
+  run.enemies.push(Object.assign(boss, { hp, maxHp: hp, fireTimer: fireInterval(run.wave) }));
+  run.events.push({ type: 'bossSpawn', x: boss.x, y: boss.y });
+}
+
+function fireMissile(run, boss) {
+  const letter = pickWord(missileLetters(run.words), onScreenWords(run), run.rand);
+  const { x, y } = missileSpawn(boss);
+  const speed = speedFor(run, MISSILE_SPEED_MUL);
+  run.enemies.push(createEnemy({ id: run.nextId++, type: 'missile', word: letter, x, y, speed, target: run.ship }));
+}
+
+function bossFire(run, dt, frozen) {
+  const boss = bossOf(run);
+  if (!boss || frozen) return;
+  boss.fireTimer -= dt;
+  if (boss.fireTimer > 0) return;
+  fireMissile(run, boss);
+  boss.fireTimer = fireInterval(run.wave);
+}
 
 function spawnEnemy(run) {
   const type = pickEnemyType(run.wave, run.rand);
   const tier = tierForType(type, run.wave, run.rand);
   const word = pickWord(run.words[tier], onScreenWords(run), run.rand);
   const x = SPAWN_MARGIN + run.rand() * (run.width - 2 * SPAWN_MARGIN);
-  const speed = run.cfg.baseSpeed * ENEMY_TYPES[type].speedMul * (run.height / REFERENCE_HEIGHT);
+  const speed = speedFor(run, ENEMY_TYPES[type].speedMul);
   run.enemies.push(createEnemy({ id: run.nextId++, type, word, x, y: SPAWN_Y, speed, target: run.ship }));
   run.toSpawn -= 1;
 }
@@ -91,11 +127,20 @@ function hurt(run, e) {
   }
 }
 
-// Every way a word can be finished ends here: typing, chain or turret.
+function countKill(run) {
+  run.kills += 1;
+  if (!run.mods.pulse) return;
+  run.pulseKills += 1;
+  if (run.pulseKills >= PULSE_EVERY) {
+    run.pulseKills = 0;
+    run.freezeTimer = PULSE_SEC;
+    run.events.push({ type: 'pulse' });
+  }
+}
+
 function destroy(run, e, points) {
   e.dead = true;
   if (run.lockId === e.id) releaseLock(run);
-  run.kills += 1;
   run.events.push({ type: 'kill', id: e.id, x: e.x, y: e.y, enemyType: e.type, points });
   if (e.type === 'splitter' && !run.mods.shortCircuit) {
     const taken = onScreenWords(run);
@@ -103,20 +148,40 @@ function destroy(run, e, points) {
     const w2 = pickWord(run.words[1], [...taken, w1], run.rand);
     run.enemies.push(...splitChildren(e, [w1, w2], [run.nextId++, run.nextId++], run.ship));
   }
-  if (run.mods.pulse) {
-    run.pulseKills += 1;
-    if (run.pulseKills >= PULSE_EVERY) {
-      run.pulseKills = 0;
-      run.freezeTimer = PULSE_SEC;
-      run.events.push({ type: 'pulse' });
+  countKill(run);
+}
+
+// A finished boss word costs it one hp. At zero it falls, its missiles with it.
+function hitBoss(run, boss, points) {
+  if (run.lockId === boss.id) releaseLock(run);
+  boss.hp -= 1;
+  run.events.push({ type: 'bossHit', id: boss.id, x: boss.x, y: boss.y, points, hp: boss.hp });
+  if (boss.hp > 0) {
+    boss.word = pickWord(run.words[bossWordTier(run.rand)], onScreenWords(run), run.rand);
+    boss.typed = 0;
+  } else {
+    boss.dead = true;
+    run.score += BOSS_REWARD * boss.maxHp;
+    for (const m of alive(run)) {
+      m.dead = true;
+      run.events.push({ type: 'pop', x: m.x, y: m.y });
     }
+    releaseLock(run);
+    run.events.push({ type: 'bossDown', x: boss.x, y: boss.y, points: BOSS_REWARD * boss.maxHp });
   }
+  countKill(run);
+}
+
+// Every way a word can be finished ends here: typing, chain or turret.
+function finishWord(run, e, points) {
+  if (e.type === 'boss') hitBoss(run, e, points);
+  else destroy(run, e, points);
 }
 
 // Upgrades remove letters as if typed. Finishing the word kills at the current combo.
 function strip(run, e, letters) {
   e.typed = Math.min(e.word.length, e.typed + letters);
-  if (e.typed === e.word.length) destroy(run, e, registerAssistKill(run, e.word.length));
+  if (e.typed === e.word.length) finishWord(run, e, registerAssistKill(run, e.word.length));
 }
 
 function closestToShip(run) {
@@ -134,7 +199,7 @@ function wordWpm(e, now) {
 function kill(run, e) {
   const clean = e.lockMisses === 0 && wordWpm(e, run.time) >= OVERDRIVE_WPM;
   const points = registerKill(run, e.word.length, run.mods.overdrive && clean ? 2 : 1);
-  destroy(run, e, points);
+  finishWord(run, e, points);
   if (run.mods.chain && run.combo >= CHAIN_MIN_COMBO) {
     const target = closestToShip(run);
     if (target) {
@@ -171,6 +236,7 @@ export function update(run, dt) {
 
   const frozen = run.freezeTimer > 0;
   run.freezeTimer = Math.max(0, run.freezeTimer - dt);
+  bossFire(run, dt, frozen);
   const slow = 1 - SLOW_STEP * run.mods.slowField;
   for (const e of run.enemies) {
     if (e.dead || frozen) continue;
@@ -216,12 +282,13 @@ export function onBackspace(run) {
   releaseLock(run);
 }
 
-// Nova: wipes every enemy on screen, once per wave. No points, no kills, no splitting.
+// Nova: wipes every enemy on screen except the boss, once per wave. No points, no kills, no splitting.
 export function triggerNova(run) {
   if (!run.novaReady || run.over || run.waveCleared) return;
   run.novaReady = false;
   releaseLock(run);
   for (const e of alive(run)) {
+    if (e.type === 'boss') continue;
     e.dead = true;
     run.events.push({ type: 'novaHit', x: e.x, y: e.y });
   }

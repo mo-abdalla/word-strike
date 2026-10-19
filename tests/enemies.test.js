@@ -8,7 +8,7 @@ const near = (a, b) => Math.abs(a - b) < 1e-9;
 test('types unlock at their waves', () => {
   assert.deepEqual(
     Object.fromEntries(Object.entries(ENEMY_TYPES).map(([k, v]) => [k, v.minWave])),
-    { drone: 1, seeker: 3, splitter: 4, armored: 6 },
+    { drone: 1, seeker: 3, splitter: 4, armored: 6, boss: Infinity, missile: Infinity },
   );
   assert.equal(ENEMY_TYPES.armored.damage, 2);
 });

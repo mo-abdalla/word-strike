@@ -3,6 +3,7 @@
 import { createPhaseMachine } from './state.js';
 import { createRun, resize as resizeRun, startWave, update, onChar, onBackspace, triggerNova } from './game.js';
 import { drawUpgrades, applyUpgrade } from './upgrades.js';
+import { isBossWave } from './waves.js';
 import { wordsFor } from './words.js';
 import { accuracy, finalWpm } from './scoring.js';
 import { applyStrings, t } from './i18n.js';
@@ -11,13 +12,14 @@ import { startLoop } from './loop.js';
 import { attachInput } from './input.js';
 import { createStarfield } from './render/starfield.js';
 import { drawShip, drawHpRing, aimAngle } from './render/ship.js';
-import { drawEnemy } from './render/enemies.js';
+import { drawEnemy, drawBoss } from './render/enemies.js';
 import { createFx } from './render/fx.js';
 import { createLabels } from './render/labels.js';
 import { createCards } from './render/cards.js';
 
 const BANNER_SEC = 1.5;
 const PICK_FLASH_SEC = 0.35;
+const BOSS_BURST_SPREAD = 36;
 const HIGH_SCORE_KEY = 'ws_hs';
 
 const $ = id => document.getElementById(id);
@@ -88,11 +90,15 @@ function showBanner(text) {
   bannerTimer = BANNER_SEC;
 }
 
+function waveBanner(n) {
+  return isBossWave(n) ? t(lang, 'bossBanner', n) : t(lang, 'waveBanner', n);
+}
+
 function newRun() {
   labels.clear();
   run = createRun({ lang, words: wordsFor(lang), width, height });
   startWave(run, 1);
-  showBanner(t(lang, 'waveBanner', 1));
+  showBanner(waveBanner(1));
   phase.set('playing');
 }
 
@@ -112,7 +118,7 @@ function endRun() {
 function openUpgrades() {
   offered = drawUpgrades(run);
   pickedIndex = -1;
-  $('upgrade-title').textContent = t(lang, 'waveClear', run.wave);
+  $('upgrade-title').textContent = isBossWave(run.wave) ? t(lang, 'bossDown') : t(lang, 'waveClear', run.wave);
   cards.show(offered, lang, rarity => t(lang, rarity));
   phase.set('upgradePick');
 }
@@ -127,14 +133,17 @@ function pickUpgrade(index) {
 function finishPick() {
   applyUpgrade(run, offered[pickedIndex].id);
   startWave(run, run.wave + 1);
-  showBanner(t(lang, 'waveBanner', run.wave));
+  showBanner(waveBanner(run.wave));
   phase.set('playing');
 }
 
 function drainEvents() {
   for (const ev of run.events) {
     if (ev.type === 'shot') fx.beam(run.ship, ev);
-    else if (ev.type === 'kill' || ev.type === 'hurt' || ev.type === 'novaHit') fx.burst(ev.x, ev.y);
+    else if (['kill', 'hurt', 'novaHit', 'pop', 'bossHit'].includes(ev.type)) fx.burst(ev.x, ev.y);
+    else if (ev.type === 'bossDown') {
+      for (const dx of [-BOSS_BURST_SPREAD, 0, BOSS_BURST_SPREAD]) fx.burst(ev.x + dx, ev.y);
+    }
     else if (ev.type === 'zap') fx.zap(ev.from, ev.to);
     else if (ev.type === 'pulse') fx.burst(run.ship.x, run.ship.y);
     else if (ev.type === 'miss' && ev.id !== null) labels.flashMiss(ev.id);
@@ -147,7 +156,9 @@ function drainEvents() {
 function drawRun() {
   const locked = run.enemies.find(e => e.id === run.lockId && !e.dead) || null;
   for (const e of run.enemies) {
-    if (!e.dead) drawEnemy(gctx, e, e === locked ? colors.cyan : colors.pink, e === locked);
+    if (e.dead) continue;
+    if (e.type === 'boss') drawBoss(gctx, e, e === locked ? colors.cyan : colors.yellow, colors.pink, colors.dim, e === locked);
+    else drawEnemy(gctx, e, e === locked ? colors.cyan : colors.pink, e === locked);
   }
   drawShip(gctx, run.ship, aimAngle(run.ship, locked), colors.cyan);
   drawHpRing(gctx, run.ship, run.hp, run.maxHp, colors.cyan, colors.dim);

@@ -37,6 +37,8 @@ canvas { position: fixed; top: 0; left: 0; display: block; }
 .label.arabic { direction: rtl; letter-spacing: 0; font-family: var(--font-ar); font-size: 17px; }
 .label.locked { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); z-index: 1; }
 .label .typed { color: var(--neon-green); text-shadow: 0 0 6px var(--neon-green); }
+.label.boss { font-size: 20px; padding: 4px 12px; border-color: var(--neon-yellow); }
+.label.boss.locked { border-color: var(--neon-cyan); }
 .label.miss { animation: label-miss 0.25s; }
 @keyframes label-miss {
   0%, 100% { margin-left: 0; }

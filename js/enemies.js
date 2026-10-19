@@ -6,6 +6,9 @@ export const ENEMY_TYPES = {
   seeker:   { minWave: 3, tiers: [2, 3], speedMul: 0.9,  damage: 1, turnRate: 1.2 },
   splitter: { minWave: 4, tiers: [2, 3], speedMul: 0.85, damage: 1, turnRate: 0 },
   armored:  { minWave: 6, tiers: [4, 5], speedMul: 0.5,  damage: 2, turnRate: 0 },
+  // Boss-wave only: never picked by the normal spawner.
+  boss:     { minWave: Infinity, tiers: [4, 5], speedMul: 0, damage: 0, turnRate: 0 },
+  missile:  { minWave: Infinity, tiers: null,   speedMul: 1, damage: 1, turnRate: 0 },
 };
 
 export const SHIP_RADIUS = 28;
