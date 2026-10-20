@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { layoutFor } from '../js/layout.js';
 
 test('desktop keeps the full size', () => {
-  assert.deepEqual(layoutFor({ width: 1280, height: 800 }), { compact: false, scale: 1, particleCap: 400, shipOffset: 70 });
+  assert.deepEqual(layoutFor({ width: 1280, height: 800 }), { compact: false, scale: 1, labelScale: 1, particleCap: 400, shipOffset: 70 });
 });
 
 test('a tall phone is compact at full scale', () => {
@@ -22,6 +22,7 @@ test('a short play area scales down by height', () => {
 
 test('the scale never drops below the minimum', () => {
   assert.equal(layoutFor({ width: 375, height: 400, touch: true }).scale, 0.6);
+  assert.equal(layoutFor({ width: 375, height: 400, touch: true }).labelScale, 0.85);
 });
 
 test('a narrow window is compact without touch', () => {

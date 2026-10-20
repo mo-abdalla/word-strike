@@ -22,6 +22,7 @@ import { createAudio } from './audio.js';
 import { layersFor, musicLevel } from './music.js';
 import { createLabels } from './render/labels.js';
 import { createCards } from './render/cards.js';
+import { layoutFor } from './layout.js';
 import { THEME_KEY, THEMES, themeIndex, applyTheme } from './meta/themes.js';
 import { ACH_KEY, WORDS_TOTAL_KEY, ACHIEVEMENTS, achievementById, unlockedFrom, newAchievements } from './meta/achievements.js';
 import { LEADERBOARD_KEY, cleanRecords, mergeBoard, qualifies, makeRecord, addRecord } from './meta/leaderboard.js';
@@ -39,6 +40,10 @@ const gctx = gameCanvas.getContext('2d');
 const starfield = createStarfield($('bg'));
 const labels = createLabels($('labels'));
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const mobileInput = $('mobile-input');
+let layout = layoutFor({ width: window.innerWidth, height: window.innerHeight, touch });
+let keys = null; // phone keyboard controls, set once input is attached
 const glow = createGlow(window.devicePixelRatio || 1);
 let feel = createFeel({ reducedMotion });
 let shipAngle = 0;
@@ -91,6 +96,12 @@ const phase = createPhaseMachine(next => {
   $('screen-upgrade').hidden = next !== 'upgradePick';
   $('hud').hidden = !(next === 'playing' || next === 'paused' || next === 'upgradePick');
   audio.setMusicLevel(musicLevel(next));
+  if (next !== 'playing') {
+    keys?.blurMobile();
+    $('tap-hint').hidden = true;
+  } else if (layout.compact && document.activeElement !== mobileInput) {
+    $('tap-hint').hidden = false;
+  }
   if (next === 'gameover' || next === 'menu') audio.stopMusic();
   if (next === 'gameover') labels.clear();
   if (next === 'menu') {
@@ -111,7 +122,10 @@ function resize() {
   gameCanvas.style.width = `${width}px`;
   gameCanvas.style.height = `${height}px`;
   gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (run) resizeRun(run, width, height);
+  layout = layoutFor({ width, height, touch });
+  document.body.classList.toggle('compact', layout.compact);
+  document.documentElement.style.setProperty('--label-scale', String(layout.labelScale));
+  if (run) resizeRun(run, width, height, layout.scale);
 }
 
 function setLang(next) {
@@ -119,7 +133,13 @@ function setLang(next) {
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   applyStrings(document, lang);
   $('record-name').placeholder = t(lang, 'enterName');
+  $('btn-pause').setAttribute('aria-label', t(lang, 'pause'));
   renderBestLine();
+}
+
+// Opens the phone keyboard. Must be called straight from a tap or key handler (iOS rule).
+function openKeyboard() {
+  if (layout.compact) keys?.focusMobile();
 }
 
 function renderBestLine() {
@@ -311,13 +331,14 @@ function waveBanner(n) {
 function newRun() {
   labels.clear();
   runAch = [];
-  feel = createFeel({ reducedMotion });
+  feel = createFeel({ reducedMotion, cap: layout.particleCap });
   shipAngle = 0;
   lastCombo = 1;
   audio.startMusic(layersFor(1, isBossWave(1)));
-  run = createRun({ lang, words: wordsFor(lang), width, height });
+  run = createRun({ lang, words: wordsFor(lang), width, height, scale: layout.scale });
   startWave(run, 1);
   showBanner(waveBanner(1));
+  openKeyboard();
   phase.set('playing');
 }
 
@@ -373,6 +394,7 @@ function pickUpgrade(index) {
   if (phase.get() !== 'upgradePick' || pickedIndex !== -1 || index >= offered.length) return;
   pickedIndex = index;
   pickTimer = PICK_FLASH_SEC;
+  openKeyboard();
   cards.flash(index);
   audio.play(soundFor({ type: 'pick' }));
 }
@@ -483,7 +505,15 @@ function handleKey(key) {
 }
 
 $('btn-start').addEventListener('click', newRun);
-$('btn-resume').addEventListener('click', () => phase.set('playing'));
+$('btn-resume').addEventListener('click', () => {
+  openKeyboard();
+  phase.set('playing');
+});
+$('btn-pause').addEventListener('click', () => { if (phase.get() === 'playing') phase.set('paused'); });
+$('tap-hint').addEventListener('click', openKeyboard);
+gameCanvas.addEventListener('click', () => { if (phase.get() === 'playing') openKeyboard(); });
+mobileInput.addEventListener('focus', () => { $('tap-hint').hidden = true; });
+mobileInput.addEventListener('blur', () => { if (phase.get() === 'playing' && layout.compact) $('tap-hint').hidden = false; });
 $('btn-pause-menu').addEventListener('click', () => phase.set('menu'));
 $('btn-again').addEventListener('click', newRun);
 $('btn-over-menu').addEventListener('click', () => phase.set('menu'));
@@ -507,10 +537,10 @@ fetch('leaderboard.json')
   .then(data => { globalBoard = cleanRecords(data); })
   .catch(() => { globalBoard = []; });
 
-attachInput(key => {
+keys = attachInput(key => {
   audio.unlock();
   handleKey(key);
-});
+}, mobileInput);
 resize();
 setLang('en');
 $('theme-name').textContent = THEMES[theme].name;
