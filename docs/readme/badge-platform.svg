@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156.8 32" width="156.8" height="32">
+<rect x="1" y="1" width="154.8" height="30" rx="8" fill="#060610" stroke="#39ff14" stroke-opacity="0.7"/>
+<text x="43.4" y="21" text-anchor="middle" fill="#39ff14" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" letter-spacing="1.5" font-weight="700">DESKTOP</text><line x1="86.8" y1="6" x2="86.8" y2="26" stroke="#555577"/><text x="121.8" y="21" text-anchor="middle" fill="#39ff14" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" letter-spacing="1.5" font-weight="700">PHONE</text>
+</svg>
