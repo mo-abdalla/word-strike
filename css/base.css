@@ -42,8 +42,8 @@ canvas { position: fixed; top: 0; left: 0; display: block; }
 .label.miss { animation: label-miss 0.25s; }
 @keyframes label-miss {
   0%, 100% { margin-left: 0; }
-  25% { margin-left: -4px; }
-  75% { margin-left: 4px; }
+  25% { margin-left: -4px; color: var(--neon-pink); background: rgba(255, 45, 120, 0.25); }
+  75% { margin-left: 4px; color: var(--neon-pink); }
 }
 
 /* HUD corners */
@@ -190,3 +190,21 @@ kbd { font-family: var(--font-mono); font-size: 11px; color: var(--dim); margin-
 .ach-toast small { display: block; font-size: 10px; letter-spacing: 1px; color: var(--dim); }
 #ach-toast-icon { font-size: 26px; }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Feel. The combo is placed with transform, so the pulse grows the font instead of scaling. */
+#hud-combo.pulse { animation: combo-pulse 0.25s ease-out; }
+@keyframes combo-pulse {
+  from { font-size: 28px; filter: brightness(1.8); }
+  to { font-size: 18px; filter: none; }
+}
+
+/* Sound panel */
+.sound-panel { display: flex; flex-direction: column; gap: 14px; }
+.sound-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sound-row input { accent-color: var(--neon-cyan); }
+.sound-row input[type="range"] { width: 180px; }
+
+/* No shake or flash for players who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .label.miss, #hud-combo.pulse { animation: none; }
+}
