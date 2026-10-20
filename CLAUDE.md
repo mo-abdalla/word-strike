@@ -4,302 +4,100 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Word Strike** — a neon cyberpunk typing-speed trainer built as a single self-contained HTML file (`typing-game.html`). No build step, no dependencies, no external assets. Everything is inline HTML/CSS/JS. The game teaches faster typing through progressive difficulty, real-time feedback, and a combo/score system.
+**Word Strike** — a neon arcade typing game. Enemies carrying words fall toward the player's ship; typing a word locks on and fires. Waves have no ceiling, each cleared wave offers three upgrades, and every 5th wave is a boss. English and Arabic, desktop and phone.
+
+Plain ES modules (`index.html` + `css/` + `js/`). No build step, no dependencies, no asset files: graphics, sound effects and music are generated in code.
+
+The design spec is `docs/superpowers/specs/2026-10-19-arcade-redesign-design.md`. Each feature was built from a plan in `docs/superpowers/plans/` (plans 1–6). Read the spec before changing gameplay rules.
 
 ## Deployment
 
-**Live (Vercel):** deployed from the `master` branch of `github.com/mo-abdalla/word-strike` (private repo). Vercel auto-redeploys on every push to `master`.
+**Live (Vercel):** deployed from `master` of `github.com/mo-abdalla/word-strike` (private). Vercel auto-redeploys on every push to `master` and serves `index.html` at `/`. Pull requests get preview deployments.
 
-`vercel.json` rewrites `/` → `/typing-game.html` so the root URL serves the game (Vercel's static server defaults to `index.html`, which doesn't exist here).
-
-**GitHub:** `https://github.com/mo-abdalla/word-strike.git` — private repo, SSH auth via `C:\Program Files\GitHub CLI\gh.exe` (account: `mo-abdalla`).
-
-## Running locally
-
-The launch config serves the project root with Python's built-in HTTP server:
+## Running and testing
 
 ```
-python -m http.server 3737
+python3 -m http.server 3737      # then open http://localhost:3737/
+node --test 'tests/*.test.js'    # all unit tests, no install
 ```
 
-Then open `http://localhost:3737/typing-game.html`. The `.claude/launch.json` is already configured for the `preview_start` tool under the name `typing-game`. Node/npm is not available in this environment — Python is the only runtime.
-
-## Game overview
-
-Words drift left across the screen as glowing neon tiles. The player types the currently highlighted word to destroy it with a particle explosion. Letting a word escape off the left edge costs a life (♥) and resets the combo. The game ends at 0 HP. 10 levels of escalating speed and word difficulty; level 10 is "Infinite Mode" with no further scaling.
-
-**HUD stats:** WPM (rolling 10-second window) · Accuracy (%) · Score · Combo multiplier · Level badge · Hearts (HP)
-On mobile (≤520px) Accuracy and Combo are hidden to fit the compact single-row HUD.
-
-**Scoring:**
-- Base: `word.length × 10 × combo` points per word
-- Combo escalates: ×1 → ×2 (2 words) → ×4 (4 words) → ×8 (8 words); resets on any miss
-- High score persisted to `localStorage` key `ws_hs`
-
-**Keyboard shortcuts (always active):**
-| Key | Action |
-|-----|--------|
-| `Esc` | Pause (during play) / Resume (when paused) |
-| `Enter` | Start (from start/game-over screen) / Resume (when paused) |
-| `R` | Reset to start screen (only when paused or on game-over screen — not during active play) |
+Both Python and Node (v22) are available. `.claude/launch.json` defines the `typing-game` server on port 3737 for `preview_start`. Test changes in the browser on port 3737 before calling them done.
 
 ## Architecture
 
-`typing-game.html` is self-contained with three logical layers:
+### Files
 
-### Rendering (two `<canvas>` elements)
-- `#bg-canvas` — animated starfield; `drawStars()` runs its own `requestAnimationFrame` loop independently of game state, always moving.
-- `#fx-canvas` — particle explosions on word destruction; `fxLoop()` always running. Particles are plain objects `{x, y, vx, vy, life, decay, r, color}` updated and drawn each frame.
-
-### DOM word tiles
-- `<div class="word-tile">` elements, `position:absolute` over the canvases inside `#game-area`.
-- Each tile tracked in `state.tiles[id]` as `{word, typed, x, y, el, speed}`.
-- Characters rendered as individual `<span class="char">` elements; typed chars get class `typed` (neon green glow), wrong key triggers `wrong-flash` class (pink border flash) via `flashError()`.
-- One tile is always "active" (`state.activeId`) — glowing cyan border, receives all keystrokes. Auto-selects the left-most tile after a word is destroyed or escapes.
-
-### Game loop
-- `moveLoop(ts)` — `requestAnimationFrame` loop that translates tiles left by `speed × (dt / 16.67)` px per frame. Bails immediately if `!state.running || state.paused`. Restarted explicitly on `resumeGame()` and `startGame()`.
-- `spawnTimer` — `setInterval` that calls `spawnWord()` at the interval defined by the current level config. Cleared on pause/stop, restarted via `restartSpawnTimer()`. Spawn is also called immediately on game start so the first word appears instantly.
-
-### State machine
-Two booleans govern everything: `state.running` and `state.paused`.
-
-| State | `running` | `paused` |
-|-------|-----------|----------|
-| Idle / game over | `false` | `false` |
-| Playing | `true` | `false` |
-| Paused | `true` | `true` |
-
-Lifecycle functions:
-- `startGame()` — resets all counters, hides the main overlay, starts loops, calls `focusMobileInput()`.
-- `pauseGame()` — cancels RAF + interval, shows `#pause-overlay`, freezes tiles in place, calls `blurMobileInput()`.
-- `resumeGame()` — hides pause overlay, resets `lastMove`, restarts RAF + interval, calls `focusMobileInput()`.
-- `resetGame()` — full teardown (removes all tiles, cancels loops), restores the start-screen overlay, calls `blurMobileInput()`.
-- `gameOver()` — stops loops, saves high score, shows game-over stats in the main overlay, calls `blurMobileInput()`.
-
-**`syncMenuButtons()` must be called after every state transition** — it updates the disabled/enabled state and label of the three HUD menu buttons (`#btn-start`, `#btn-stop`, `#btn-reset`). Missing a call will leave buttons in a stale state.
-
-### Menu controls (HUD)
-Three compact buttons live in `#menu-controls` inside the HUD bar, between the level badge and the hearts:
-- **▶ Start / Resume** (`#btn-start`) — calls `startGame()` when idle, `resumeGame()` when paused. Label changes dynamically via `.menu-label` span (targeted by `syncMenuButtons()`).
-- **⏸ Pause** (`#btn-stop`) — calls `pauseGame()`. Disabled unless actively playing.
-- **↺ Reset** (`#btn-reset`) — calls `resetGame()`. Disabled when idle. Styled with `.is-danger` for pink hover.
-
-Button text spans use class `.menu-label`; keyboard hint spans use `.menu-key`. Both are hidden on mobile via media query (buttons show icon only).
-
-The pause overlay (`#pause-overlay`) is semi-transparent so the player can see the frozen word positions. It contains its own Resume and Reset buttons wired to the same functions.
-
-### Level progression
-- `LEVEL_CFG[1..10]` — each entry: `{maxWords, spawnMs, speedPx, tiers[1..5]}`.
-- `LEVEL_SCORE[1..10]` — cumulative score thresholds; checked in `checkLevelUp()` after every word completion.
-- Word pool has 5 tiers (2–3 chars → 11+ chars). `tiers` array in each level config is a percentage weight array; `pickWord()` rolls against it to select a tier, then picks a random word from that tier avoiding on-screen duplicates.
-- Level-up triggers a brief `#level-splash` card animation and calls `restartSpawnTimer()` with the new interval.
-
-### Audio
-- Procedural via Web Audio API (`state.audioCtx`). Initialized lazily on first keystroke via `initAudio()` to satisfy browser autoplay policy.
-- All sounds synthesized with `playTone(freq, type, dur, vol, delay)` — oscillator + gain node, no audio files.
-- Events: key tick (triangle wave), word complete (ascending arpeggio), miss (sawtooth thud), level up (chord), wrong key (square blip).
-
-### Visual / CSS
-- CSS custom properties on `:root` for all neon colors (`--neon-cyan`, `--neon-green`, `--neon-pink`, `--neon-yellow`, `--neon-purple`) — change here to retheme.
-- `body.shake` triggers a keyframe animation for screen shake on HP loss.
-- `.menu-btn.is-active` → cyan glow. `.menu-btn.is-danger` → pink on hover. Both toggled by `syncMenuButtons()`.
-- HUD is `position:fixed`, `z-index:10`; pause overlay is `z-index:15`; main overlay (start/game-over) is `z-index:20`; level-up splash is `z-index:25`; tap hint is `z-index:6`.
-- `@media (max-width: 520px)` — compact HUD (44px), icon-only buttons, hidden Acc/Combo stats, smaller tiles and hearts.
-
-### On-Screen Keyboard & SVG Hand Visualization (Desktop Only)
-
-A visual keyboard panel appears at the bottom of the screen during gameplay (desktop only, hidden on mobile ≤520px):
-- **Keyboard panel** (`#keyboard-panel`, 160px tall) displays QWERTY (English) or Arabic 101 layouts with neon-colored keys organized by finger (pinky/ring/middle/index).
-- **SVG hand overlay** (`#hand-svg`) overlays the keyboard, showing both hands (10 fingers total). Each finger is a single tapered `<path>` (rounded fingertip, wider base) rather than a wireframe skeleton, and each hand has a rounded `<rect>` palm connecting the fingers at their base. Each finger is color-coded to match its corresponding keyboard keys.
-- **Finger order/orientation**: per hand, pinky is the outermost digit and thumb is the innermost, angled inward toward the spacebar (real hand anatomy) — left hand goes pinky→ring→middle→index→thumb left-to-right; right hand mirrors it, index→middle→ring→pinky left-to-right, with thumb innermost on the right side too.
-- **Finger highlighting**: When a key is needed, both the key and its corresponding finger light up with glow and semi-transparent fill via the `.active` class.
-- **Implementation**:
-  - SVG markup (both hands, all finger `<path>`s and palm `<rect>`s) is rebuilt as a template literal each time `buildKeyboard()` runs (to avoid being wiped by `innerHTML = ''`)
-  - Each keyboard key has `data-finger` (thumb/index/middle/ring/pinky) and `data-hand` (left/right) attributes, set via `getHandForKey()` lookup map
-  - `updateKeyboardHighlight()` queries the SVG for the matching finger group and adds the `.active` class
-  - CSS handles glow and fill via `--kc` custom property (the finger's neon color); the palm has its own static `.palm-outline` style and never lights up
-
-**Visibility**: The keyboard and hands are shown/hidden via `showKeyboard()` / `hideKeyboard()`, called by lifecycle functions (`startGame()`, `pauseGame()`, `resumeGame()`, `resetGame()`, `gameOver()`). Ensure `syncMenuButtons()` is called after every state transition to keep HUD button states in sync.
-
-### Mobile support
-The game is fully playable on smartphones. Key implementation details:
-
-**Virtual keyboard** — a hidden `<input id="mobile-input">` (1×1px at `top:0; left:0; opacity:0`) is focused programmatically on game start/resume. This is the only reliable cross-browser way to trigger the software keyboard. `font-size: 16px` prevents iOS Safari from auto-zooming on focus. The input must be within the visible viewport — iOS silently refuses to show the keyboard for `position:fixed` inputs positioned off-screen.
-
-**Input routing** — `isMobile` (`'ontouchstart' in window || navigator.maxTouchPoints > 0`) gates the two input paths:
-- Desktop: `keydown` on `document` (unchanged, fires regardless of focus)
-- Mobile: `input` event on `#mobile-input`; `e.data` holds the typed character; value is cleared immediately after each keystroke so `e.data` is always a single char
-
-Both paths call `processChar(key)` — a shared function extracted from the original keydown handler.
-
-**Viewport** — `resizeCanvases()` and `spawnWord()` both read `window.visualViewport.height` (fallback: `window.innerHeight`) so words never spawn behind the software keyboard. A `visualViewport.resize` listener re-runs canvas resize when the keyboard slides in/out.
-
-**Tap-to-type hint** — `<div id="tap-hint">` is shown when `#mobile-input` loses focus during active play (keyboard dismissed). Tapping it, or tapping `#game-area`, re-focuses the hidden input. The hint hides again on `focus`.
-
-**Mobile input helpers** (called by lifecycle functions):
-- `focusMobileInput()` — no-op on desktop; on mobile calls `mobileInput.focus()` **synchronously** (no setTimeout) so the call stays within the user-gesture event handler iOS requires to show the keyboard.
-- `blurMobileInput()` — blurs input and hides tap hint; called on pause/game-over/reset to dismiss the keyboard.
-
-### Language support
-The game supports English and Arabic. Language is chosen on the start/game-over overlay before every game; it persists across resets but not page reloads (defaults to `'en'`).
-
-**State:**
-- `state.language` — `'en'` | `'ar'`; read by `pickWord()` and `spawnWord()`.
-- `overlayMode` — `'start'` | `'gameover'`; set by `resetGame()` and `gameOver()` so `applyOverlayStrings()` knows which text set to apply.
-
-**Word lists:**
-- `WORDS` / `ALL_WORDS_BY_TIER` — English, 5 tiers.
-- `WORDS_AR` / `ALL_WORDS_AR_BY_TIER` — Arabic, same 5-tier structure (grouped by character length).
-- `pickWord()` selects the correct tier list based on `state.language`.
-- `spawnWord()` adds class `arabic` to the tile element when Arabic is active.
-
-**UI strings:**
-- `STRINGS.en` / `STRINGS.ar` — all overlay-visible text: `title`, `sub`, `instructions` (HTML), `startBtn`, `playAgain`, `best(n)`, `gameOver`, `statScore`, `statWpm`, `statAcc`, `statWords`.
-- `applyOverlayStrings()` — applies `STRINGS[state.language]` to the overlay. In `'start'` mode updates title/subtitle/instructions/start-button. In `'gameover'` mode updates game-over title/stat-labels/play-again-button. Always updates the high-score line. Also toggles `#overlay.rtl` for RTL text direction.
-- `updateLangButton()` — syncs `.lang-btn` `.active` class, sets `mobileInput.lang` and `mobileInput.dir`, then calls `applyOverlayStrings()`.
-
-**Language selector UI:**
-- `#lang-selector` in `#overlay` — two `.lang-btn` buttons (`data-lang="en"` / `data-lang="ar"`). Active button glows cyan. Visible on both the start screen and game-over screen.
-
-**Arabic tile rendering:**
-- `.word-tile.arabic` — `direction: rtl; letter-spacing: 0; font-family: system-ui, …`. The browser's shaping engine correctly renders connected Arabic letterforms across individual `<span class="char">` elements when `letter-spacing` is 0.
-- `mobileInput.lang = 'ar'` and `mobileInput.dir = 'rtl'` hint the OS to suggest the Arabic keyboard layout on mobile.
-
----
-
-## Handoff Notes
-
-### Current Project State and Architecture
-
-Everything below is fully working as of 2026-06-30:
-
-- 10-level progression with escalating speed and word difficulty; Level 10 is Infinite Mode (no further scaling)
-- Real-time WPM (rolling 10-second window), Accuracy, Score, and Combo multiplier in the HUD
-- Combo system: ×1 → ×2 → ×4 → ×8; resets on any miss or escaped word
-- High score persisted to `localStorage` key `ws_hs`
-- Pause / Resume / Reset via HUD buttons and keyboard shortcuts (Esc / Enter / R)
-- Particle explosion on word completion; starfield runs independently at all times
-- Full mobile support: hidden `#mobile-input` triggers software keyboard; `visualViewport` keeps words above keyboard
-- English and Arabic word sets (5 tiers each); language selector on start/game-over overlay; Arabic tiles render RTL with correct letterform shaping
-- Deployed on Vercel (auto-deploy from `master`) and served locally via `python -m http.server 3737`
-
-**File structure:**
-
-| File | Responsibility |
-|------|---------------|
-| `typing-game.html` | Entire game — CSS, HTML, JS, word lists, all inline |
-| `vercel.json` | Rewrites `/` → `/typing-game.html` for Vercel |
-| `CLAUDE.md` | Architecture guide for AI sessions |
-| `.claude/launch.json` | `preview_start` config (`prs-game` profile, port 3737) |
-
-**Non-obvious architectural patterns:**
-- Two always-running RAF loops (`drawStars` / `fxLoop`) that ignore `state.running` and `state.paused` — they keep the background alive even on the start screen and pause overlay.
-- `moveLoop` is the only game-gated RAF; it bails at the top if `!state.running || state.paused`.
-- `spawnTimer` is a `setInterval`, not RAF — cleared on pause/stop, restarted via `restartSpawnTimer()`.
-- Z-index stack: canvas (0) → game-area tiles (5) → HUD (10) → pause-overlay (15) → main overlay start/gameover (20) → level-splash (25) → tap-hint (6).
-
-### Key Decisions Made and Why
-
-**Single self-contained HTML file**
-- Why: zero-setup deploy, no build step, works anywhere Python can serve files. The user explicitly chose this over a bundled app.
-- Rules out: importing external libraries, splitting JS/CSS into separate files, using `import` statements.
-
-**DOM word tiles over canvas text**
-- Why: HTML text rendering handles Arabic RTL ligatures and right-to-left shaping natively. Canvas `fillText` would require a custom Arabic shaper.
-- Rules out: rendering tiles on `#fx-canvas` or `#bg-canvas`. Tiles are always `<div class="word-tile">` DOM elements inside `#game-area`.
-
-**Two-boolean state machine (`running` + `paused`)**
-- Why: simpler than an enum; two booleans cover every valid state with no invalid combinations at runtime.
-- Rules out: a third boolean to distinguish "idle" from "game-over" — both are `running:false, paused:false`. The overlay content distinguishes them via `overlayMode`.
-
-**Always-on starfield and particle RAF loops**
-- Why: visual continuity — the background keeps moving while the game is paused or on the start screen.
-- Rules out: gating `drawStars()` or `fxLoop()` on `state.running`. Never cancel these RAFs in lifecycle functions; only `moveLoop` gets cancelled.
-
-**Hidden 1×1px input for mobile keyboard (`#mobile-input`)**
-- Why: the only reliable cross-browser way to programmatically trigger the software keyboard on iOS and Android.
-- Rules out: `focus()` calls inside `setTimeout` — iOS requires the focus call to happen synchronously inside a user-gesture handler. Any async path silently fails to open the keyboard.
-
-**`letter-spacing: 0` on `.word-tile.arabic`**
-- Why: the browser's text shaping engine connects Arabic letters into correct ligatures only when letter-spacing is exactly zero. Any non-zero value breaks the per-`<span>` character approach and renders disconnected glyphs.
-- Rules out: using `letter-spacing` for Arabic tile visual spacing. Use padding or gap instead.
-
-**`visualViewport.height` instead of `window.innerHeight`**
-- Why: on mobile, `window.innerHeight` does not shrink when the software keyboard opens. `visualViewport.height` reflects the actual visible area, so words never spawn behind the keyboard.
-- Rules out: using `window.innerHeight` anywhere that feeds canvas sizing or spawn Y-coordinate logic.
-
-### Coding Patterns and Conventions Established
-
-**State transitions:** every lifecycle function (`startGame`, `pauseGame`, `resumeGame`, `resetGame`, `gameOver`) must call `syncMenuButtons()` at the end to keep HUD button labels and disabled states in sync. Missing this call leaves stale button states.
-
-**i18n additions:** to add a new UI string, add it to both `STRINGS.en` and `STRINGS.ar`, then apply it inside `applyOverlayStrings()`. Never hardcode English text in DOM-manipulating functions.
-
-**Audio:** always use the `playTone(freq, type, dur, vol, delay)` helper. Never create oscillator/gain nodes directly. Gate everything behind `if (!state.audioCtx) return` — `initAudio()` is called lazily on first keystroke and may not exist yet.
-
-**CSS theming:** all colors are `--neon-*` custom properties on `:root`. Change them there to retheme. Never hardcode hex colors in JS `fillStyle` calls — pull from `getComputedStyle` if you need a canvas color.
-
-**Tile registry:** every live tile has an entry in `state.tiles[id]` as `{word, typed, x, y, el, speed}`. When removing a tile (word complete or escaped), always delete `state.tiles[id]` and `el.remove()` together — orphaned DOM elements or orphaned state entries both cause bugs.
-
-**Active tile selection:** after any tile is removed, call `selectLeftmostTile()` to re-establish `state.activeId`. Never set `state.activeId` directly outside that function.
-
-**Mobile focus:** `focusMobileInput()` must be called synchronously inside the user-gesture event handler (button click, keydown). Never wrap it in `setTimeout`.
-
-### Specific Next Steps with Implementation Details
-
-**1. Mute / sound toggle (low effort)**
-
-Add `muted: false` to `state`. Gate `playTone()`:
-```js
-function playTone(freq, type, dur, vol = 0.3, delay = 0) {
-  if (state.muted || !state.audioCtx) return;
-  // ... existing oscillator code ...
-}
 ```
-Add a mute button to `#menu-controls` in the HUD (between `#btn-reset` and `#hearts`):
-```html
-<button id="btn-mute" class="menu-btn" title="Mute">🔇</button>
+index.html          canvases, label layer, HUD, screens, hidden phone input
+css/base.css        theme variables, HUD, screens, panels, phone layout
+js/main.js          wiring: phases, frame, rendering calls, screens, input
+js/state.js         phase machine (the only place a phase changes)
+js/loop.js          one always-running requestAnimationFrame, dt capped at 50 ms
+js/input.js         desktop keydown + phone hidden field → handleKey(key)
+js/mobile-input.js  field value change → keys (pure)
+js/layout.js        screen size → compact / scale / particle cap (pure)
+js/game.js          one run: spawning, movement, collisions, kills, upgrades' effects, boss waves
+js/targeting.js     lock-on and strict letter matching
+js/enemies.js       enemy types, movement, collision with the ship, splitting
+js/waves.js         difficulty curve, tier weights, enemy type picks, boss waves (n % 5 === 0)
+js/boss.js          boss hp, fire rate, missile letters
+js/upgrades.js      upgrade pool (12), three-card draw, applying a pick
+js/scoring.js       combo, points, accuracy, WPM
+js/feel.js          particles, shake, hitstop, flashes (state only)
+js/sound.js         audio settings and which sound each game event makes
+js/audio.js         Web Audio: effects channel, music channel and scheduling
+js/music.js         music loop as data: layers per wave, level per phase
+js/i18n.js          UI strings (en / ar) and applyStrings()
+js/words.js         word lists, 5 tiers per language
+js/storage.js       localStorage wrapper (every access in try/catch)
+js/render/          starfield, ship, enemies, fx, glow sprites, DOM labels, upgrade cards, colours
+js/meta/            themes, achievements, leaderboard, share card
+tests/              node:test unit tests for every logic module
 ```
-Wire it: `btnMute.onclick = () => { state.muted = !state.muted; syncMenuButtons(); }`.
-In `syncMenuButtons()`, update `btnMute.textContent` between `🔇` / `🔊`.
 
-**2. Difficulty / lives selector on start overlay (low effort)**
+### Module rules
+- Logic modules (`game`, `targeting`, `enemies`, `waves`, `boss`, `upgrades`, `scoring`, `feel`, `sound`, `music`, `layout`, `mobile-input`) never touch `document` or a canvas, so they run under Node tests.
+- `render/` modules read state and never change it.
+- Game logic never imports `upgrades.js`: an upgrade only changes `run.hp` / `run.maxHp` or a counter in `run.mods`.
+- `game.js` reports what happened through `run.events`; `main.js` drains them each frame for effects, sound and achievements.
+- Relative imports always end in `.js`.
 
-Add a segmented control above the Start button on `#overlay` with Easy (7 HP) / Normal (5 HP) / Hard (3 HP). Store choice in `state.startHp` (default `5`). In `startGame()`, replace `state.hp = 5` with `state.hp = state.startHp`. Add difficulty labels to `STRINGS.en/ar`.
+### Phases
+One enum `phase` instead of booleans: `menu`, `playing`, `paused`, `upgradePick`, `gameover`. Allowed transitions live in `state.js`; an invalid one throws. The `onChange` callback in `main.js` shows and hides screens, sets the music level, and closes the phone keyboard outside `playing`.
 
-**3. Per-level WPM leaderboard (medium effort)**
+### Frame loop
+- A single `requestAnimationFrame` always runs. Background, particles and effects update in every phase.
+- Game logic (`update(run, dt)`) runs only in `playing` and outside hitstop.
+- All timings accumulate `dt`, never `Date.now()`, so pausing freezes everything with no special code. Music is the exception: it schedules on the audio clock.
 
-`localStorage` key `ws_wpm_L{n}` per level (1–10). After `gameOver()`, if `state.level > 1`, record best WPM per level reached. Display on game-over overlay as a small table. `STRINGS` needs new keys for the table header and "Best WPM" label.
+### Rendering
+- `canvas#bg`: starfield and nebula. `canvas#game`: enemies, ship, bullets, particles.
+- Enemy words are DOM elements in `#labels`, so Arabic letters shape and join correctly.
+- Glow is pre-rendered into cached sprites (`render/glow.js`); no `shadowBlur` inside the frame loop. The cache is cleared on theme change.
+- `run.scale` (from `layout.js`) shrinks the ship, enemies, boss, hp ring and hit radius on phones.
 
-**4. French / Spanish language support (medium effort — i18n infrastructure ready)**
+### Z-index stack
+`#mobile-input` (−1) → `#bg` (0) → `#game` (1) → `#labels` (2) → `#tap-hint` (6) → `#hud` (10) → `#wave-banner` (12) → screens (20) → panel (30) → achievement toast (40).
 
-The entire i18n system is already parameterised. Adding a third language requires:
-1. `WORDS_FR` / `ALL_WORDS_FR_BY_TIER` — same 5-tier structure as English
-2. `STRINGS.fr` — translate all existing keys
-3. A third `.lang-btn` in `#lang-selector`
-4. `updateLangButton()` already handles arbitrary language codes — no changes needed there
+### Storage keys
+`ws_hs` best score · `ws_best_wave` · `ws_ach` achievements · `ws_words_total` · `ws_theme` · `ws_leaderboard` local records · `ws_audio` `{music, sfx, muted}`.
 
-**5. Timed challenge mode (needs design first)**
+### Language
+- `lang` is `'en'` or `'ar'`, chosen on the menu. `applyStrings()` fills every `[data-i18n]` element and sets `dir="rtl"` for Arabic, which mirrors the HUD corners and card order.
+- Every UI string goes in both `STRINGS.en` and `STRINGS.ar` (a test checks the key sets match). Never hardcode text in DOM code.
+- Matching is strict: `أ` does not match `ا`.
 
-A "60 seconds" mode that ends after a fixed duration rather than on HP loss. Needs a countdown timer in the HUD, a new `mode` field in `state`, and a `gameOver()` branch for time-up. The start overlay needs a mode selector (infinite lives vs. timed). Design the UX before implementing.
+### Phone
+- `layoutFor()` marks the screen compact at width ≤ 520, or ≤ 800 on touch devices. Compact adds `body.compact`: score and wave only in the HUD, a pause button, vertical upgrade cards, no key hints, particle cap 200.
+- Typing goes through the hidden `#mobile-input`. Characters come from the change in its value (`keysFromChange`), because phone keyboards compose a word and resend all of it. Deleting is Backspace. Enter and Escape still come through `keydown`.
+- `#tap-hint` shows when the field loses focus during play; tapping it or the play area refocuses.
 
-### Features added (2026-08-18)
+## Rules that are easy to break
 
-**Themes** — `THEMES` array of 4 palettes (Cyber / Synth / Matrix / Vapor). `applyTheme(idx)` writes the `--neon-*` / `--bg` / `--tile-bg` / `--text` / `--dim` custom properties onto `document.documentElement`; everything (tiles, keyboard, particles) recolors automatically because it reads those vars. `cycleTheme()` advances and persists the index to `localStorage` key `ws_theme`. Button `#btn-theme` in `#menu-controls` shows the current theme name.
-
-**Achievements** — `ACHIEVEMENTS` list (id / icon / en / ar). Unlocked set persisted to `localStorage` `ws_ach`; cumulative word count to `ws_words_total`. `unlockAch(id)` is idempotent, fires a toast (`#ach-banner`, z-index 18) and a sound, and is called from `wordComplete` (first_blood, combo8, century), `checkLevelUp` (flawless, level10), and `gameOver` (speedster, perfect). `boss_slayer` unlocks on first boss kill. `renderAchList()` shows chips on the game-over overlay (`#ach-list`).
-
-**Boss Fights** — `isBossLevel()` returns true at level 5 and every 5th level. `checkLevelUp()` calls `startBoss()` instead of `restartSpawnTimer()` on those levels. A boss is a stationary `word-tile.tile-boss` (`speed: 0`) with `state.boss = {id, hp, maxHp, deadline, _pauseLeft}`. Typing the full word chips `boss.hp` and reselects a new word; at 0 HP `endBoss(true)` does a multi-burst, `+500 × maxHp` score, and resumes normal spawns. If the `deadline` (45s) passes, `moveLoop` calls `endBoss(false)` + `loseHp()`. `#boss-bar` (z-index 14) shows HP fill + countdown. `pauseGame()`/`resumeGame()` freeze/unfreeze the deadline via `_pauseLeft` so the timer doesn't run while paused. `moveLoop` skips position updates for tiles with `speed === 0` (so the boss stays centered).
-
-**Share Card** — `buildShareCard()` renders a 600×800 neon result PNG onto an offscreen canvas (reads theme vars via `getComputedStyle`), `showShareCard()` previews it (`#share-preview`) and reveals `#share-row` on the game-over overlay. `#btn-share` uses the Web Share API with files (falls back to download); `#btn-save` downloads `word-strike-result.png`. Canvas `ctx.direction = 'rtl'` is set for Arabic.
-
-**New state fields:** `boss`, `bossActive`, `levelErrors`, `levelWords` (reset in `startGame`, `resetGame`, and on each level-up). **New z-index layers:** `#ach-banner` = 18, `#boss-bar` = 14. **Lifecycle:** every start/reset/gameover now also hides `#ach-banner`, `#boss-bar`, `#share-row`, `#share-preview`, `#ach-list`.
-
-### Files That Need Attention Next
-
-| File | Why it needs attention |
-|------|----------------------|
-| `typing-game.html` | Entire codebase — CSS, HTML, and JS all inline; read this before any feature work |
-| `CLAUDE.md` | Update the Architecture sections if new patterns are introduced (state fields, lifecycle functions, z-index layers) |
-| `memory/project_mobile_support.md` | Documents iOS-specific keyboard constraints — read before touching `focusMobileInput()` or viewport logic |
-| `memory/project_arabic_language.md` | Documents the `letter-spacing: 0` shaping requirement and Arabic tier structure — read before modifying tile rendering or adding languages |
+- **Phone focus is synchronous.** `openKeyboard()` (→ `focusMobile()`) must run directly inside a tap or key handler. iOS refuses to open the keyboard from `setTimeout` or a later frame.
+- **The hidden input stays inside the viewport** (`top:0; left:0`, 1×1, `opacity:0`) with `font-size: 16px`. Off-screen inputs don't get a keyboard on iOS; smaller fonts make iOS zoom.
+- **Play-area height comes from `visualViewport.height`**, never `window.innerHeight`, so enemies stay above the phone keyboard.
+- **Arabic labels keep `letter-spacing: 0`.** Any other value breaks letter joining.
+- **Audio starts only after a user gesture.** Every sound goes through `audio.play()` / the music scheduler, which do nothing before `audio.unlock()`.
+- **Colours come from the `--neon-*` / `--bg` / `--tile-bg` / `--text` / `--dim` variables.** Canvas code reads them through `readColors()`; never hardcode hex in JS drawing code.
+- **No external libraries, fonts or files.** Everything stays in this repository.

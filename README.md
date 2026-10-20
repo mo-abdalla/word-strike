@@ -1,59 +1,60 @@
 # Word Strike ⌨️
 
-A neon cyberpunk typing-speed trainer. Words drift left across the screen as glowing tiles — type them before they escape, chain combos for score multipliers, and climb through 10 levels of escalating speed and difficulty.
+A neon arcade typing game. Words fall toward your ship as enemies — type a word to lock on and fire. Clear a wave, pick one of three upgrades, and see how many waves you can survive. Every fifth wave brings a boss that fires missiles.
 
-Single self-contained HTML file. No build step, no dependencies, no external assets.
+Plain HTML, CSS and JavaScript modules. No build step, no dependencies, no asset files: graphics, sound and music are all generated in code.
 
 ## Play
 
-Live on Vercel: deploys automatically from `master`.
+Live on Vercel: deploys automatically from `master`. Works on desktop and on phones, in English and Arabic.
 
 ## Run locally
 
-Requires Python (no Node/npm needed):
+Any static file server works. With Python:
 
 ```bash
-python -m http.server 3737
+python3 -m http.server 3737
 ```
 
-Then open `http://localhost:3737/typing-game.html`.
+Then open `http://localhost:3737/`.
+
+## Tests
+
+Requires Node 18+ (no install step):
+
+```bash
+node --test 'tests/*.test.js'
+```
 
 ## How to play
 
-- Type the currently highlighted (glowing) word to destroy it.
-- Letting a word scroll off the left edge costs a life (♥) and resets your combo.
-- Game ends at 0 HP. Reach level 10 for **Infinite Mode**.
+- Type the first letter of any enemy's word to lock on to it, then finish the word to destroy it.
+- An enemy that reaches your ship costs hit points. The ring around the ship shows what you have left.
+- After each wave, pick one of three upgrades (`1` `2` `3`, or tap a card).
+- Every 5th wave is a boss: type its words to wear down its health, and shoot its one-letter missiles before they hit.
+- Combo grows with words typed in a row: ×2 after 2, ×4 after 4, ×8 after 8. Any miss resets it.
 
-**HUD:** WPM (rolling 10s window) · Accuracy · Score · Combo multiplier · Level · Hearts
+**Keys:**
 
-**Scoring:** `word length × 10 × combo` points per word. Combo escalates ×1 → ×2 → ×4 → ×8 and resets on any miss. High score is saved locally in your browser.
+| Screen | Key | Action |
+|--------|-----|--------|
+| Menu | `Enter` | Start a run |
+| Playing | `Esc` | Pause |
+| Playing | `Backspace` | Release the lock |
+| Playing | `Enter` | Fire Nova (when you have it) |
+| Paused | `Esc` / `Enter` | Resume |
+| Paused / Game over | `R` | Back to menu |
+| Game over | `Enter` | New run |
 
-**Keyboard shortcuts:**
-
-| Key | Action |
-|-----|--------|
-| `Esc` | Pause / Resume |
-| `Enter` | Start / Resume |
-| `R` | Reset (when paused or on game-over screen) |
+On a phone, tapping Start opens the keyboard. A pause button sits in the top corner.
 
 ## Features
 
-- 10 levels of escalating speed and word difficulty, plus Infinite Mode at level 10
-- Combo multiplier system with particle-explosion feedback
-- Full mobile support — virtual keyboard, responsive HUD, touch-friendly layout
-- English and Arabic word sets with a language selector and RTL rendering
-- Procedural sound effects (Web Audio API — no audio files)
-- Neon starfield background and screen-shake on hit
-
-## Tech
-
-Everything — HTML, CSS, and JavaScript — lives in `typing-game.html`. Rendering uses two `<canvas>` layers (starfield + particle effects) plus DOM elements for word tiles, which lets Arabic text shape and render correctly.
-
-See `CLAUDE.md` for the full architecture writeup.
-
-## Deployment
-
-`vercel.json` rewrites `/` → `/typing-game.html` so the root URL serves the game directly.
+- Endless waves with a rising difficulty curve, four enemy types and boss waves
+- 12 upgrades in three rarities (common, rare, epic)
+- English and Arabic word sets, with a fully mirrored interface in Arabic
+- Four colour themes, eight achievements, a local leaderboard and a shareable result card
+- Generated sound effects and a layered music loop, with separate volume controls
 
 ## License
 
