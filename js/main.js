@@ -400,12 +400,12 @@ function drawRun(dt) {
   const locked = run.enemies.find(e => e.id === run.lockId && !e.dead) || null;
   for (const e of run.enemies) {
     if (e.dead) continue;
-    if (e.type === 'boss') drawBoss(gctx, glow, e, e === locked ? colors.cyan : colors.yellow, colors.pink, colors.dim, e === locked);
-    else drawEnemy(gctx, glow, e, e === locked ? colors.cyan : colors.pink, e === locked);
+    if (e.type === 'boss') drawBoss(gctx, glow, e, e === locked ? colors.cyan : colors.yellow, colors.pink, colors.dim, e === locked, run.scale);
+    else drawEnemy(gctx, glow, e, e === locked ? colors.cyan : colors.pink, e === locked, run.scale);
   }
   shipAngle = turnToward(shipAngle, aimAngle(run.ship, locked), SHIP_TURN_RATE * dt);
-  drawShip(gctx, glow, run.ship, shipAngle, heatColor(run.combo, colors.cyan, colors.yellow), colors.yellow, feel.recoil, Math.random());
-  drawHpRing(gctx, run.ship, run.hp, run.maxHp, colors.cyan, colors.dim);
+  drawShip(gctx, glow, run.ship, shipAngle, heatColor(run.combo, colors.cyan, colors.yellow), colors.yellow, feel.recoil, Math.random(), run.scale);
+  drawHpRing(gctx, run.ship, run.hp, run.maxHp, colors.cyan, colors.dim, run.scale);
   labels.sync(run.enemies, run.lockId, run.lang);
 
   $('hud-score').textContent = run.score.toLocaleString('en');

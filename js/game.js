@@ -28,10 +28,11 @@ export function createMods() {
   };
 }
 
-export function createRun({ lang, words, width, height, rand = Math.random }) {
+// scale shrinks the ship and its hit radius on small screens (see layout.js); 1 on desktop.
+export function createRun({ lang, words, width, height, rand = Math.random, scale = 1 }) {
   return {
-    lang, words, rand, width, height,
-    ship: { x: width / 2, y: height - SHIP_OFFSET },
+    lang, words, rand, width, height, scale,
+    ship: { x: width / 2, y: height - Math.round(SHIP_OFFSET * scale) },
     hp: START_HP, maxHp: START_HP,
     score: 0, streak: 0, combo: 1, maxCombo: 1,
     correctKeys: 0, totalKeys: 0, kills: 0,
@@ -46,11 +47,12 @@ export function createRun({ lang, words, width, height, rand = Math.random }) {
   };
 }
 
-export function resize(run, width, height) {
+export function resize(run, width, height, scale = run.scale) {
   run.width = width;
   run.height = height;
+  run.scale = scale;
   run.ship.x = width / 2;
-  run.ship.y = height - SHIP_OFFSET;
+  run.ship.y = height - Math.round(SHIP_OFFSET * scale);
   const boss = bossOf(run);
   if (boss) boss.x = width / 2;
 }
@@ -245,7 +247,7 @@ export function update(run, dt) {
     if (e.dead || frozen) continue;
     if (run.mods.focus && e.id === run.lockId) continue;
     updateEnemy(e, e.y > run.height * SLOW_ZONE ? dt * slow : dt, run.ship);
-    if (reachedShip(e, run.ship)) hurt(run, e);
+    if (reachedShip(e, run.ship, run.scale)) hurt(run, e);
     if (run.over) break;
   }
   run.enemies = run.enemies.filter(e => !e.dead);

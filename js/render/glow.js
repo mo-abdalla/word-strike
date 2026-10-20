@@ -32,10 +32,11 @@ export function createGlow(dpr = 1) {
     return made;
   }
 
-  function stamp(ctx, s, x, y, angle = 0) {
+  function stamp(ctx, s, x, y, angle = 0, scale = 1) {
     ctx.save();
     ctx.translate(x, y);
     if (angle) ctx.rotate(angle);
+    if (scale !== 1) ctx.scale(scale, scale);
     ctx.drawImage(s.canvas, -s.size / 2, -s.size / 2, s.size, s.size);
     ctx.restore();
   }

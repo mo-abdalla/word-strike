@@ -1,7 +1,7 @@
 // tests/game.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRun, startWave, update, onChar, onBackspace, START_HP } from '../js/game.js';
+import { createRun, resize, startWave, update, onChar, onBackspace, START_HP } from '../js/game.js';
 
 const WORDS = {
   1: ['ab', 'cd', 'ef', 'gh'],
@@ -120,4 +120,20 @@ test('typing is ignored after the wave is cleared', () => {
   update(run, 0.016);
   onChar(run, 'z');
   assert.equal(run.totalKeys, 0);
+});
+
+test('the ship sits at the full offset by default', () => {
+  const run = createRun({ lang: 'en', words: WORDS, width: 800, height: 800 });
+  assert.equal(run.scale, 1);
+  assert.equal(run.ship.y, 730);
+});
+
+test('a smaller scale moves the ship closer to the bottom, and resize keeps it', () => {
+  const run = createRun({ lang: 'en', words: WORDS, width: 375, height: 400, scale: 0.6 });
+  assert.equal(run.ship.y, 358);
+  resize(run, 375, 500);
+  assert.equal(run.ship.y, 458);
+  resize(run, 1280, 800, 1);
+  assert.equal(run.scale, 1);
+  assert.equal(run.ship.y, 730);
 });

@@ -49,10 +49,10 @@ function bossPath(g) {
   g.moveTo(BOSS_RADIUS, 0); g.lineTo(BOSS_RADIUS * 1.7, -14);
 }
 
-function drawTrail(ctx, e, color) {
+function drawTrail(ctx, e, color, scale) {
   const len = Math.hypot(e.vx, e.vy) || 1;
-  const tx = e.x - (e.vx / len) * TRAIL_PX;
-  const ty = e.y - (e.vy / len) * TRAIL_PX;
+  const tx = e.x - (e.vx / len) * TRAIL_PX * scale;
+  const ty = e.y - (e.vy / len) * TRAIL_PX * scale;
   const grad = ctx.createLinearGradient(e.x, e.y, tx, ty);
   grad.addColorStop(0, color);
   grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -67,21 +67,22 @@ function drawTrail(ctx, e, color) {
   ctx.restore();
 }
 
-export function drawEnemy(ctx, glow, e, color, locked) {
+export function drawEnemy(ctx, glow, e, color, locked, scale = 1) {
   const shape = SHAPES[e.type];
-  if (e.type === 'seeker') drawTrail(ctx, e, color);
+  if (e.type === 'seeker') drawTrail(ctx, e, color, scale);
   const s = glow.sprite(`${e.type}|${color}|${locked}`, shape.radius, color, locked ? 2.5 : 1.5, shape.path);
   const angle = e.type === 'missile' ? Math.atan2(e.vy, e.vx) - Math.PI / 2 : 0;
-  glow.stamp(ctx, s, e.x, e.y, angle);
+  glow.stamp(ctx, s, e.x, e.y, angle, scale);
 }
 
-export function drawBoss(ctx, glow, boss, color, hpColor, dimColor, locked) {
+export function drawBoss(ctx, glow, boss, color, hpColor, dimColor, locked, scale = 1) {
   const s = glow.sprite(`boss|${color}|${locked}`, BOSS_RADIUS * 1.7, color, locked ? 3 : 2, bossPath);
-  glow.stamp(ctx, s, boss.x, boss.y);
-  const x = boss.x - BAR_WIDTH / 2;
-  const y = boss.y - BOSS_RADIUS - 16;
+  glow.stamp(ctx, s, boss.x, boss.y, 0, scale);
+  const width = BAR_WIDTH * scale;
+  const x = boss.x - width / 2;
+  const y = boss.y - (BOSS_RADIUS + 16) * scale;
   ctx.fillStyle = dimColor;
-  ctx.fillRect(x, y, BAR_WIDTH, BAR_HEIGHT);
+  ctx.fillRect(x, y, width, BAR_HEIGHT);
   ctx.fillStyle = hpColor;
-  ctx.fillRect(x, y, (BAR_WIDTH * boss.hp) / boss.maxHp, BAR_HEIGHT);
+  ctx.fillRect(x, y, (width * boss.hp) / boss.maxHp, BAR_HEIGHT);
 }
