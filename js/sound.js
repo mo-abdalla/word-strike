@@ -1,6 +1,6 @@
 // js/sound.js
 // Sound design as data: the voices each game event plays. audio.js turns them into Web Audio nodes.
-// A voice is a tone {kind:'tone', freq, type, dur, vol, delay} or a noise burst {kind:'noise', dur, vol, delay, cutoff}.
+// A voice is a tone {kind:'tone', freq, type, dur, vol, delay} or a noise burst {kind:'noise', dur, vol, delay, cutoff, filter}.
 
 export const AUDIO_KEY = 'ws_audio';
 export const DEFAULT_AUDIO = { music: 0.6, sfx: 0.8, muted: false };
@@ -24,8 +24,12 @@ export function effectiveSfx(settings) {
   return settings.muted ? 0 : settings.sfx;
 }
 
+export function effectiveMusic(settings) {
+  return settings.muted ? 0 : settings.music;
+}
+
 const tone = (freq, type, dur, vol, delay = 0) => ({ kind: 'tone', freq, type, dur, vol, delay });
-const noise = (dur, vol, delay = 0, cutoff = 2000) => ({ kind: 'noise', dur, vol, delay, cutoff });
+const noise = (dur, vol, delay = 0, cutoff = 2000) => ({ kind: 'noise', dur, vol, delay, cutoff, filter: 'lowpass' });
 
 // The shot climbs with the combo: ×1 at the base, ×8 an octave up.
 export function shotFreq(combo) {
