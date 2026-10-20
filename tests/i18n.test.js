@@ -34,3 +34,8 @@ test('sound panel strings', () => {
   assert.equal(t('en', 'sound'), 'Sound');
   assert.equal(t('ar', 'effects'), 'المؤثّرات');
 });
+
+test('music slider string', () => {
+  assert.equal(t('en', 'music'), 'Music');
+  assert.equal(t('ar', 'music'), 'الموسيقى');
+});
