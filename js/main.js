@@ -19,6 +19,7 @@ import { heatColor } from './render/color.js';
 import { createFeel, feelEvent, updateFeel, shakeOffset } from './feel.js';
 import { AUDIO_KEY, audioSettings, soundFor } from './sound.js';
 import { createAudio } from './audio.js';
+import { layersFor, musicLevel } from './music.js';
 import { createLabels } from './render/labels.js';
 import { createCards } from './render/cards.js';
 import { THEME_KEY, THEMES, themeIndex, applyTheme } from './meta/themes.js';
@@ -89,6 +90,8 @@ const phase = createPhaseMachine(next => {
   $('screen-gameover').hidden = next !== 'gameover';
   $('screen-upgrade').hidden = next !== 'upgradePick';
   $('hud').hidden = !(next === 'playing' || next === 'paused' || next === 'upgradePick');
+  audio.setMusicLevel(musicLevel(next));
+  if (next === 'gameover' || next === 'menu') audio.stopMusic();
   if (next === 'gameover') labels.clear();
   if (next === 'menu') {
     labels.clear();
@@ -150,23 +153,28 @@ function soundPanel() {
     setAudio({ ...audioPrefs, muted: mute.checked });
     mute.blur();
   });
+  const muteRow = cell('label', t(lang, 'mute'), 'sound-row');
+  muteRow.prepend(mute);
+  box.append(muteRow, levelRow('effects', 'sfx'), levelRow('music', 'music'));
+  return box;
+}
+
+// One slider for an audio level (sfx or music). Releasing it plays a short cue at the new level.
+function levelRow(labelKey, field) {
   const range = document.createElement('input');
   range.type = 'range';
-  range.id = 'sound-sfx';
+  range.id = `sound-${field}`;
   range.min = '0';
   range.max = '100';
-  range.value = String(Math.round(audioPrefs.sfx * 100));
-  range.addEventListener('input', () => setAudio({ ...audioPrefs, sfx: Number(range.value) / 100 }));
+  range.value = String(Math.round(audioPrefs[field] * 100));
+  range.addEventListener('input', () => setAudio({ ...audioPrefs, [field]: Number(range.value) / 100 }));
   range.addEventListener('change', () => {
     audio.play(soundFor({ type: 'pick' }));
     range.blur();
   });
-  const muteRow = cell('label', t(lang, 'mute'), 'sound-row');
-  muteRow.prepend(mute);
-  const sfxRow = cell('label', t(lang, 'effects'), 'sound-row');
-  sfxRow.append(range);
-  box.append(muteRow, sfxRow);
-  return box;
+  const row = cell('label', t(lang, labelKey), 'sound-row');
+  row.append(range);
+  return row;
 }
 
 // --- Achievements ---
@@ -306,6 +314,7 @@ function newRun() {
   feel = createFeel({ reducedMotion });
   shipAngle = 0;
   lastCombo = 1;
+  audio.startMusic(layersFor(1, isBossWave(1)));
   run = createRun({ lang, words: wordsFor(lang), width, height });
   startWave(run, 1);
   showBanner(waveBanner(1));
@@ -379,6 +388,7 @@ function drainEvents() {
   for (const ev of run.events) {
     feelEvent(feel, ev, run.ship);
     audio.play(soundFor(ev, run.combo));
+    if (ev.type === 'waveStart') audio.setMusicLayers(layersFor(ev.wave, isBossWave(ev.wave)));
     if (ev.type === 'miss' && ev.id !== null) labels.flashMiss(ev.id);
     else if (ev.type === 'waveClear') openUpgrades();
     else if (ev.type === 'gameOver') endRun();
@@ -421,6 +431,7 @@ function frame(dt) {
   const p = phase.get();
   const playing = p === 'playing';
   updateFeel(feel, p === 'paused' ? 0 : dt);
+  audio.scheduleMusic();
 
   if (playing && bannerTimer > 0) {
     bannerTimer -= dt;

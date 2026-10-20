@@ -42,6 +42,7 @@ export const STRINGS = {
     sound: 'Sound',
     mute: 'Mute',
     effects: 'Effects',
+    music: 'Music',
   },
   ar: {
     tagline: 'اكتب لتطلق النار',
@@ -83,6 +84,7 @@ export const STRINGS = {
     sound: 'الصوت',
     mute: 'كتم',
     effects: 'المؤثّرات',
+    music: 'الموسيقى',
   },
 };
 
