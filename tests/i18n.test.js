@@ -39,3 +39,9 @@ test('music slider string', () => {
   assert.equal(t('en', 'music'), 'Music');
   assert.equal(t('ar', 'music'), 'الموسيقى');
 });
+
+test('phone strings', () => {
+  assert.equal(t('en', 'tapToType'), 'Tap to type');
+  assert.equal(t('ar', 'tapToType'), 'انقر للكتابة');
+  assert.equal(t('ar', 'pause'), 'إيقاف');
+});

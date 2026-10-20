@@ -34,8 +34,8 @@ export function updateEnemy(e, dt, target) {
   e.y += e.vy * dt;
 }
 
-export function reachedShip(e, ship) {
-  return Math.hypot(e.x - ship.x, e.y - ship.y) <= SHIP_RADIUS || e.y >= ship.y;
+export function reachedShip(e, ship, scale = 1) {
+  return Math.hypot(e.x - ship.x, e.y - ship.y) <= SHIP_RADIUS * scale || e.y >= ship.y;
 }
 
 export function splitChildren(parent, words, ids, target) {

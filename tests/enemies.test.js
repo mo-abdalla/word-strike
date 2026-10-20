@@ -42,6 +42,12 @@ test('reachedShip', () => {
   assert.equal(reachedShip({ x: 50, y: 701 }, ship), true);
 });
 
+test('reachedShip shrinks its radius with the scale', () => {
+  const ship = { x: 400, y: 700 };
+  assert.equal(reachedShip({ x: 400, y: 680 }, ship, 0.6), false);
+  assert.equal(reachedShip({ x: 400, y: 685 }, ship, 0.6), true);
+});
+
 test('splitter children', () => {
   const kids = splitChildren({ x: 100, y: 50, speed: 40 }, ['ab', 'cd'], [7, 8], { x: 100, y: 500 });
   assert.deepEqual(kids.map(k => k.id), [7, 8]);

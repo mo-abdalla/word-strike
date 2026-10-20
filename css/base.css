@@ -31,13 +31,13 @@ canvas { position: fixed; top: 0; left: 0; display: block; }
 #labels { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 .label {
   position: absolute; left: 0; top: 0; white-space: nowrap;
-  font-size: 15px; letter-spacing: 1px; padding: 2px 8px; border-radius: 4px;
+  font-size: calc(15px * var(--label-scale, 1)); letter-spacing: 1px; padding: 2px 8px; border-radius: 4px;
   background: var(--tile-bg); border: 1px solid var(--neon-pink);
 }
-.label.arabic { direction: rtl; letter-spacing: 0; font-family: var(--font-ar); font-size: 17px; }
+.label.arabic { direction: rtl; letter-spacing: 0; font-family: var(--font-ar); font-size: calc(17px * var(--label-scale, 1)); }
 .label.locked { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); z-index: 1; }
 .label .typed { color: var(--neon-green); text-shadow: 0 0 6px var(--neon-green); }
-.label.boss { font-size: 20px; padding: 4px 12px; border-color: var(--neon-yellow); }
+.label.boss { font-size: calc(20px * var(--label-scale, 1)); padding: 4px 12px; border-color: var(--neon-yellow); }
 .label.boss.locked { border-color: var(--neon-cyan); }
 .label.miss { animation: label-miss 0.25s; }
 @keyframes label-miss {
@@ -203,6 +203,37 @@ kbd { font-family: var(--font-mono); font-size: 11px; color: var(--dim); margin-
 .sound-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sound-row input { accent-color: var(--neon-cyan); }
 .sound-row input[type="range"] { width: 180px; }
+
+/* Phones. The hidden field opens the software keyboard: it must stay inside the viewport,
+   and 16px stops iOS from zooming in on focus. */
+#mobile-input {
+  position: fixed; top: 0; left: 0; width: 1px; height: 1px; padding: 0; border: 0;
+  opacity: 0; font-size: 16px; z-index: -1;
+}
+#btn-pause {
+  display: none; position: absolute; top: 10px; inset-inline-end: 12px; pointer-events: auto;
+  width: 40px; height: 40px; font-size: 18px; border: 1px solid var(--dim);
+}
+#tap-hint {
+  position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%); z-index: 6;
+  padding: 10px 22px; border: 1px solid var(--neon-cyan); box-shadow: 0 0 12px var(--neon-cyan);
+  background: var(--tile-bg);
+}
+body.compact #btn-pause { display: block; }
+body.compact .hud-best { display: none; }
+body.compact #hud > div { top: 10px; font-size: 18px; }
+body.compact kbd { display: none; }
+body.compact .screen { justify-content: flex-start; padding: 48px 16px 24px; overflow-y: auto; }
+body.compact .screen-clear { justify-content: center; }
+body.compact .final-stats { gap: 18px; }
+body.compact .cards { flex-direction: column; gap: 10px; width: 100%; max-width: 360px; }
+body.compact .card {
+  width: 100%; min-height: 0; padding: 10px 14px;
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 12px; text-align: start;
+}
+body.compact .card-icon { grid-row: span 3; font-size: 30px; }
+body.compact .card-rarity { margin-top: 0; }
+body.compact .upgrade-title { font-size: 24px; }
 
 /* No shake or flash for players who ask for less motion. */
 @media (prefers-reduced-motion: reduce) {

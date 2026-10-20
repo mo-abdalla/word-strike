@@ -26,11 +26,12 @@ function shipPath(g) {
 }
 
 // recoil pushes the ship back along its nose; flicker in [0, 1) sets the flame length.
-export function drawShip(ctx, glow, ship, angle, color, flameColor, recoil, flicker) {
+export function drawShip(ctx, glow, ship, angle, color, flameColor, recoil, flicker, scale = 1) {
   const back = { x: -Math.sin(angle) * recoil, y: Math.cos(angle) * recoil };
   ctx.save();
   ctx.translate(ship.x + back.x, ship.y + back.y);
   ctx.rotate(angle);
+  ctx.scale(scale, scale);
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = flameColor;
   ctx.beginPath();
@@ -40,11 +41,11 @@ export function drawShip(ctx, glow, ship, angle, color, flameColor, recoil, flic
   ctx.closePath();
   ctx.fill();
   ctx.restore();
-  glow.stamp(ctx, glow.sprite(`ship|${color}`, SHIP_RADIUS, color, 2, shipPath), ship.x + back.x, ship.y + back.y, angle);
+  glow.stamp(ctx, glow.sprite(`ship|${color}`, SHIP_RADIUS, color, 2, shipPath), ship.x + back.x, ship.y + back.y, angle, scale);
 }
 
-export function drawHpRing(ctx, ship, hp, maxHp, color, dimColor) {
-  const radius = 38;
+export function drawHpRing(ctx, ship, hp, maxHp, color, dimColor, scale = 1) {
+  const radius = 38 * scale;
   const gap = 0.12;
   const segment = (Math.PI * 2) / maxHp;
   ctx.lineWidth = 3;
