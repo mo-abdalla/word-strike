@@ -39,6 +39,9 @@ export const STRINGS = {
     yourRun: 'YOUR RUN',
     name: 'Name',
     noScores: 'No scores yet',
+    sound: 'Sound',
+    mute: 'Mute',
+    effects: 'Effects',
   },
   ar: {
     tagline: 'اكتب لتطلق النار',
@@ -77,6 +80,9 @@ export const STRINGS = {
     yourRun: 'نتيجتك',
     name: 'الاسم',
     noScores: 'لا نتائج بعد',
+    sound: 'الصوت',
+    mute: 'كتم',
+    effects: 'المؤثّرات',
   },
 };
 

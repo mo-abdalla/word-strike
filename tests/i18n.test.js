@@ -29,3 +29,8 @@ test('menu, panel and game-over strings', () => {
   assert.equal(t('ar', 'newRecord'), 'رقم قياسيّ جديد!');
   assert.equal(t('ar', 'share'), 'شارك النتيجة');
 });
+
+test('sound panel strings', () => {
+  assert.equal(t('en', 'sound'), 'Sound');
+  assert.equal(t('ar', 'effects'), 'المؤثّرات');
+});
